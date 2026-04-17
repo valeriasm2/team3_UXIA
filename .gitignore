@@ -1,14 +1,36 @@
-# Ignorar directorios de entornos virtuales
+# 🐍 Python / Django
 env/
+venv/
 uxia_virtual/
 
-# Ignorar archivos generados por Python
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*.sqlite3
 
-# Ignorar variables de entorno (si usas .env)
+# Archivos de entorno
 .env
 
-# Ignorar archivos de configuración de IDE
+# Archivos estáticos generados
+staticfiles/
+media/
+
+# Migraciones (opcional según proyecto)
+# */migrations/*
+# !*/migrations/__init__.py
+
+# 🧠 IDEs
 .vscode/
+.idea/
+
+# 🟢 Node / React
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build de React
+dist/
+build/
+
+# Otros
+.DS_Store
