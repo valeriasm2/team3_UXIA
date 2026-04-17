@@ -36,7 +36,6 @@ myprojectUxia/
 
 ```bash
 git clone <URL_DEL_REPO>
-cd myprojectUxia
 ```
 
 ### 2. Crear i activar l'entorn virtual de Python
