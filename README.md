@@ -36,7 +36,6 @@ myprojectUxia/
 
 ```bash
 git clone <URL_DEL_REPO>
-cd myprojectUxia
 ```
 
 ### 2. Crear i activar l'entorn virtual de Python
@@ -51,6 +50,7 @@ source uxia_virtual/bin/activate
 ### 3. Instal·lar dependències de Django
 
 ```bash
+cd myprojectUxia
 pip install -r requirements.txt
 ```
 
