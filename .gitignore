@@ -9,6 +9,7 @@ __pycache__/
 
 # Archivos de entorno
 .env
+.env.example
 
 # Archivos estáticos generados
 staticfiles/
