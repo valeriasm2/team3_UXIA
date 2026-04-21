@@ -37,7 +37,7 @@ CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS",default=[
     "http://127.0.0.1:5173",
 ])
 
-
+OLLAMA_URL = env("OLLAMA_URL", default="http://localhost:11434")
 # Application definition
 
 INSTALLED_APPS = [

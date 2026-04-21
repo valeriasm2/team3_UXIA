@@ -1,5 +1,4 @@
-// Bypassing cache 1
-import { useEffect, useState } from "react";
+import IdentificaItem from "./IdentificaItem";
 
 function App() {
   const [mensaje, setMensaje] = useState(" ");
@@ -11,8 +10,9 @@ function App() {
   }, []);
 
   return (
-    <div>
+    <div id="center">
       <h1>{mensaje}</h1>
+      <IdentificaItem />
     </div>
   );
 }

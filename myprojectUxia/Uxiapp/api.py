@@ -1,5 +1,9 @@
-from ninja import NinjaAPI, ModelSchema, Schema
+from ninja import NinjaAPI, ModelSchema, Schema, File
+from ninja.files import UploadedFile
 from typing import List, Optional
+import base64
+import requests
+from django.conf import settings
 from .models import Expo, Item, Imatge, Etiqueta, Intent
 
 api = NinjaAPI(title="UXIA API", version="2.0")
@@ -53,6 +57,12 @@ class ExpoDetailSchema(ModelSchema):
     class Meta:
         model = Expo
         fields = '__all__'
+
+
+class IdentifyResponseSchema(Schema):
+    descripcio: str
+    etiquetes: List[str]
+    intent_id: int
 
 
 # ─── Endpoints: Expos ─────────────────────────────────────────────────────────
@@ -126,3 +136,57 @@ def list_intents(request, item_id: Optional[int] = None, encert: Optional[bool] 
     if encert is not None:
         qs = qs.filter(encert=encert)
     return qs
+# ─── Endpoints: IA (marIA 2) ──────────────────────────────────────────────────
+
+@api.post("/identify", response=IdentifyResponseSchema, tags=["IA"])
+def identify_item(request, imatge: UploadedFile = File(...)):
+    """
+    Identifica un ítem a partir d'una foto mitjançant marIA 2 (Ollama).
+    Enregistra l'intent i retorna la descripció i etiquetes generades.
+    """
+    # 1. Enregistrar l'intent al servidor
+    intent = Intent.objects.create(imatge=imatge)
+    
+    # 2. Preparar imatge per a Ollama (Base64)
+    imatge.seek(0)
+    image_data = base64.b64encode(imatge.read()).decode('utf-8')
+    
+    # 3. Cridar al servei marIA 2
+    payload = {
+        "model": "marIA2",
+        "prompt": "Identifica aquest objecte. Respon en català amb una descripció curta i una llista d'etiquetes separades per comes al final. Format: Descripció | etiqueta1, etiqueta2",
+        "stream": False,
+        "images": [image_data]
+    }
+    
+    try:
+        response = requests.post(
+            f"{settings.OLLAMA_URL}/api/generate",
+            json=payload,
+            timeout=60
+        )
+        response.raise_for_status()
+        data = response.json()
+        raw_text = data.get("response", "")
+        
+        # 4. Processar la resposta de la IA
+        if "|" in raw_text:
+            parts = raw_text.split("|", 1)
+            descripcio = parts[0].strip()
+            etiquetes = [t.strip() for t in parts[1].split(",")]
+        else:
+            descripcio = raw_text.strip()
+            etiquetes = ["IA"]
+
+        return {
+            "descripcio": descripcio,
+            "etiquetes": etiquetes,
+            "intent_id": intent.id
+        }
+        
+    except Exception as e:
+        return {
+            "descripcio": f"Error de connexió amb marIA 2: {str(e)}",
+            "etiquetes": ["error"],
+            "intent_id": intent.id
+        }
