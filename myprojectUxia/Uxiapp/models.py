@@ -27,7 +27,6 @@ class Expo(models.Model):
 class Item(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
-    imagen = models.ImageField(upload_to='items')
     expo = models.ForeignKey(
         Expo,
         on_delete=models.CASCADE,
