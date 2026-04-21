@@ -159,7 +159,7 @@ def identify_item(request, imatge: UploadedFile = File(...)):
     )
     
     payload = {
-        "model": "qwen2-vl:latest",
+        "model": "qwen3-vl:latest",
         "prompt": prompt,
         "stream": False,
         "images": [image_data]
