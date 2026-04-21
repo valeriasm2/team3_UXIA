@@ -181,6 +181,8 @@ def identify_item(request, imatge: UploadedFile = File(...)):
         if "|" in raw_text:
             parts = raw_text.split("|", 1)
             descripcio = parts[0].strip()
+            if descripcio.startswith("#"):
+                descripcio = descripcio[1:].strip()
             # Netegem possibles prefixos que la IA pugui afegir per error
             if descripcio.lower().startswith("descripció:"):
                 descripcio = descripcio[11:].strip()
@@ -189,6 +191,7 @@ def identify_item(request, imatge: UploadedFile = File(...)):
             if etiquetes_raw.lower().startswith("etiquetes:"):
                 etiquetes_raw = etiquetes_raw[10:].strip()
             
+            etiquetes_raw = etiquetes_raw.replace("#", ",")
             etiquetes = [t.strip() for t in etiquetes_raw.split(",") if t.strip()]
         else:
             # Fallback si no segueix el format exactament
