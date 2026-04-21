@@ -96,19 +96,11 @@ class Expo(models.Model):
 class Item(models.Model):
     nom = models.CharField(max_length=100, verbose_name="Nom")
     descripcio = models.TextField(verbose_name="Descripció")
-    imatge = models.ImageField(upload_to=item_upload, verbose_name="Imatge")
     expo = models.ForeignKey(
         Expo,
         on_delete=models.CASCADE,
         related_name='items',
         verbose_name="Exposició"
-    )
-    imatge_destacada = models.ImageField(
-        upload_to=item_upload,
-        blank=True,
-        null=True,
-        verbose_name="Imatge destacada",
-        help_text="Imatge principal de l'ítem, mostrada al llistat i la fitxa."
     )
     etiquetes = models.ManyToManyField(
         Etiqueta,

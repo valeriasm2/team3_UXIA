@@ -22,7 +22,7 @@ class ImatgeInline(admin.TabularInline):
     model = Imatge
     extra = 1
     ordering = ['ordre']
-    fields = ('imatge', '_preview', 'es_publica', 'ordre')
+    fields = ('imatge', '_preview', 'es_destacada', 'es_publica', 'ordre')
     readonly_fields = ('_preview',)
 
     @admin.display(description='Previsualització')
@@ -36,21 +36,30 @@ class IntentInline(admin.TabularInline):
     fields = ('imatge', '_preview', 'encert', 'confiança', 'creat_el')
     readonly_fields = ('_preview', 'creat_el')
 
-    @admin.display(description='Foto')
+    @admin.display(description='Miniatura')
     def _preview(self, obj):
         return img_preview(obj.imatge, size=60)
+
+
+class ItemEtiquetaInline(admin.TabularInline):
+    model = Item.etiquetes.through
+    extra = 1
+    verbose_name = "Etiqueta"
+    verbose_name_plural = "Etiquetes"
 
 
 class ItemInline(admin.TabularInline):
     model = Item
     extra = 1
     show_change_link = True
-    fields = ('nom', 'imatge_destacada', '_preview', 'expo')
+    fields = ('nom', '_preview', 'expo')
     readonly_fields = ('_preview',)
 
-    @admin.display(description='Imatge destacada')
+    @admin.display(description='Miniatura')
     def _preview(self, obj):
-        return img_preview(obj.imatge_destacada, size=60)
+        # Mostrem la primera imatge destacada o la primera imatge a seques
+        img = obj.imatges.filter(es_destacada=True).first() or obj.imatges.first()
+        return img_preview(img.imatge if img else None, size=60)
 
 
 # ─── Etiqueta ─────────────────────────────────────────────────────────────────
@@ -120,28 +129,22 @@ class ItemAdmin(admin.ModelAdmin):
     list_display = ('nom', 'expo', '_imatge_preview', 'num_imatges', 'num_intents', 'creat_el')
     list_filter = ('expo', 'etiquetes')
     search_fields = ('nom', 'descripcio')
-    filter_horizontal = ('etiquetes',)
-    inlines = [ImatgeInline, IntentInline]
-    readonly_fields = ('_imatge_preview_gran',)
+    inlines = [ImatgeInline, ItemEtiquetaInline, IntentInline]
     fieldsets = (
         ('Informació general', {
             'fields': ('nom', 'descripcio', 'expo')
         }),
-        ('Imatge destacada', {
-            'fields': ('imatge_destacada', '_imatge_preview_gran')
-        }),
-        ('Etiquetes', {
-            'fields': ('etiquetes',)
-        }),
     )
 
-    @admin.display(description='Destacada')
+    @admin.display(description='Imatges destacades')
     def _imatge_preview(self, obj):
-        return img_preview(obj.imatge_destacada, size=55)
-
-    @admin.display(description='Previsualització imatge destacada')
-    def _imatge_preview_gran(self, obj):
-        return img_preview(obj.imatge_destacada, size=280)
+        # Mostrem previsualitzacions de les imatges destacades
+        imgs = obj.imatges.filter(es_destacada=True)
+        if not imgs:
+            imgs = obj.imatges.all()[:1]
+        
+        previews = [img_preview(img.imatge, size=55) for img in imgs]
+        return format_html(" ".join(previews)) if previews else img_preview(None)
 
     @admin.display(description='Imatges')
     def num_imatges(self, obj):
@@ -156,13 +159,13 @@ class ItemAdmin(admin.ModelAdmin):
 
 @admin.register(Imatge)
 class ImatgeAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'item', '_visibilitat', 'ordre', '_preview', 'creat_el')
+    list_display = ('__str__', 'item', 'es_destacada', '_visibilitat', 'ordre', '_preview', 'creat_el')
     list_filter = ('es_publica', 'item__expo')
     search_fields = ('item__nom',)
     readonly_fields = ('_preview_gran',)
     fieldsets = (
         (None, {
-            'fields': ('item', 'imatge', '_preview_gran', 'es_publica', 'ordre')
+            'fields': ('item', 'imatge', '_preview_gran', 'es_destacada', 'es_publica', 'ordre')
         }),
     )
 
