@@ -156,7 +156,7 @@ def identify_item(request, imatge: UploadedFile = File(...)):
     # 3. Cridar al servei marIA 2
     prompt = (
         "Identifica aquest objecte de l'exposició. Respon en català. "
-        "Proporciona una descripció molt breu de l'objecte i després una llista d'etiquetes clau. "
+        "Proporciona una descripció breu de 5 línies de l'objecte i després una llista d'etiquetes clau. "
         "Format obligatori: DESCRIPCIÓ | etiqueta1, etiqueta2, etiqueta3"
     )
     
@@ -203,6 +203,13 @@ def identify_item(request, imatge: UploadedFile = File(...)):
             descripcio = descripcio[1:].strip()
         if descripcio.lower().startswith("descripció:"):
             descripcio = descripcio[11:].strip()
+            
+        # El model qwen3 de vegades empra hashtags com separadors dins de la frase
+        descripcio = descripcio.replace("#", ", ")
+        
+        # Netejar espais repetits just davant de les comes
+        import re
+        descripcio = re.sub(r'\s+,', ',', descripcio)
             
         # 4.2 Netejar Etiquetes
         etiquetes_raw = etiquetes_raw.strip()
