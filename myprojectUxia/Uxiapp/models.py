@@ -16,7 +16,9 @@ def imatge_upload(instance, filename):
 
 
 def intent_upload(instance, filename):
-    return f"intents/{instance.item_id}/{filename}"
+    if instance.item_id:
+        return f"intents/{instance.item_id}/{filename}"
+    return f"intents/unknown/{filename}"
 
 
 # ─── Etiqueta (tag) ────────────────────────────────────────────────────
@@ -160,6 +162,8 @@ class Intent(models.Model):
         Item,
         on_delete=models.CASCADE,
         related_name='intents',
+        null=True,
+        blank=True,
         verbose_name="Ítem identificat"
     )
     encert = models.BooleanField(

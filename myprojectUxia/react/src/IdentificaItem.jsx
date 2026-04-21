@@ -25,13 +25,19 @@ const IdentificaItem = () => {
         method: "POST",
         body: formData,
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error del servidor (${response.status}): ${errorText.substring(0, 50)}`);
+      }
+      
       const data = await response.json();
       setResult(data);
     } catch (error) {
       console.error("Error identificant ítem:", error);
       setResult({
-        descripcio: "Error de connexió amb marIA 2",
-        etiquetes: ["error"],
+        descripcio: `Error: ${error.message || "Problema de connexió amb la IA"}`,
+        etiquetes: ["error", "x"],
       });
     } finally {
       setLoading(false);
@@ -56,8 +62,13 @@ const IdentificaItem = () => {
           onClick={() => fileInputRef.current.click()}
           disabled={loading}
         >
-          {loading ? "Analitzant..." : "Fes una foto ara"}
+          {loading ? (
+            <span className="loading-spinner-text">Analitzant imatge...</span>
+          ) : (
+            <>📸 Fes una foto o puja un arxiu</>
+          )}
         </button>
+        <p className="hint">Pots triar una foto de la teva galeria o fer-ne una al moment</p>
       </div>
 
       <input
@@ -71,13 +82,16 @@ const IdentificaItem = () => {
 
       {result && (
         <div className="result-info animate-in">
-          <h3>Resultat de la IA:</h3>
+          <div className="result-header">
+            <span className="sparkle">✨</span>
+            <h3>Identificació completa</h3>
+          </div>
           <p className="description">{result.descripcio}</p>
           <div className="tags-container">
             {result.etiquetes &&
               result.etiquetes.map((tag, i) => (
                 <span key={i} className="tag-badge">
-                  {tag}
+                  #{tag}
                 </span>
               ))}
           </div>

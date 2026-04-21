@@ -152,9 +152,15 @@ def identify_item(request, imatge: UploadedFile = File(...)):
     image_data = base64.b64encode(imatge.read()).decode('utf-8')
     
     # 3. Cridar al servei marIA 2
+    prompt = (
+        "Identifica aquest objecte de l'exposició. Respon en català. "
+        "Proporciona una descripció molt breu de l'objecte i després una llista d'etiquetes clau. "
+        "Format obligatori: DESCRIPCIÓ | etiqueta1, etiqueta2, etiqueta3"
+    )
+    
     payload = {
-        "model": "marIA2",
-        "prompt": "Identifica aquest objecte. Respon en català amb una descripció curta i una llista d'etiquetes separades per comes al final. Format: Descripció | etiqueta1, etiqueta2",
+        "model": "qwen3-vl:30b",
+        "prompt": prompt,
         "stream": False,
         "images": [image_data]
     }
@@ -163,19 +169,30 @@ def identify_item(request, imatge: UploadedFile = File(...)):
         response = requests.post(
             f"{settings.OLLAMA_URL}/api/generate",
             json=payload,
-            timeout=60
+            timeout=180
         )
         response.raise_for_status()
         data = response.json()
         raw_text = data.get("response", "")
         
         # 4. Processar la resposta de la IA
+        raw_text = data.get("response", "").strip()
+        
         if "|" in raw_text:
             parts = raw_text.split("|", 1)
             descripcio = parts[0].strip()
-            etiquetes = [t.strip() for t in parts[1].split(",")]
+            # Netegem possibles prefixos que la IA pugui afegir per error
+            if descripcio.lower().startswith("descripció:"):
+                descripcio = descripcio[11:].strip()
+                
+            etiquetes_raw = parts[1].strip()
+            if etiquetes_raw.lower().startswith("etiquetes:"):
+                etiquetes_raw = etiquetes_raw[10:].strip()
+            
+            etiquetes = [t.strip() for t in etiquetes_raw.split(",") if t.strip()]
         else:
-            descripcio = raw_text.strip()
+            # Fallback si no segueix el format exactament
+            descripcio = raw_text
             etiquetes = ["IA"]
 
         return {
