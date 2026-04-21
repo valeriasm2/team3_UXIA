@@ -82,7 +82,7 @@ class ExpoAdmin(admin.ModelAdmin):
             'fields': ('nom', 'descripcio', 'lloc', 'data_inici', 'data_fi')
         }),
         ('Imatge i estat', {
-            'fields': ('imatge_portada', '_portada_gran', 'estat')
+            'fields': ('imatge', '_portada_gran', 'estat')
         }),
     )
 
@@ -102,11 +102,11 @@ class ExpoAdmin(admin.ModelAdmin):
 
     @admin.display(description='Portada')
     def _portada(self, obj):
-        return img_preview(obj.imatge_portada, size=50)
+        return img_preview(obj.imatge, size=50)
 
     @admin.display(description='Previsualització portada')
     def _portada_gran(self, obj):
-        return img_preview(obj.imatge_portada, size=280)
+        return img_preview(obj.imatge, size=280)
 
     @admin.display(description='Nº ítems')
     def num_items(self, obj):
