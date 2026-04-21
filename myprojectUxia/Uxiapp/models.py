@@ -3,31 +3,31 @@ from django.db import models
 
 class Expo(models.Model):
 
-    class Estado(models.TextChoices):
-        INIT = 'INIT', 'Init'
+    class Estat(models.TextChoices):
+        INIT = 'INIT', 'Inici'
         DISPONIBLE = 'DISPONIBLE', 'Disponible'
         ACTUALITZABLE = 'ACTUALITZABLE', 'Actualitzable'
 
-    nombre = models.CharField(max_length=100)
-    fecha_inicio = models.DateField()
-    fecha_fin = models.DateField()
-    lugar = models.CharField(max_length=100)
-    descripcion = models.TextField()
-    imagen = models.ImageField(upload_to='expos')
+    nom = models.CharField(max_length=100)
+    data_inici = models.DateField()
+    data_fi = models.DateField()
+    lloc = models.CharField(max_length=100)
+    descripcio = models.TextField()
+    imatge = models.ImageField(upload_to='expos')
 
-    estado = models.CharField(
+    estat = models.CharField(
         max_length=20,
-        choices=Estado.choices,
-        default=Estado.INIT
+        choices=Estat.choices,
+        default=Estat.INIT
     )
 
     def __str__(self):
-        return self.nombre
+        return self.nom
 
 class Item(models.Model):
-    nombre = models.CharField(max_length=100)
-    descripcion = models.TextField()
-    imagen = models.ImageField(upload_to='items')
+    nom = models.CharField(max_length=100)
+    descripcio = models.TextField()
+    imatge = models.ImageField(upload_to='items')
     expo = models.ForeignKey(
         Expo,
         on_delete=models.CASCADE,
@@ -35,24 +35,24 @@ class Item(models.Model):
     )
 
     def __str__(self):
-        return self.nombre
+        return self.nom
 
 
 class Imatge(models.Model):
-    imagen = models.ImageField(upload_to='imatges')
+    imatge = models.ImageField(upload_to='imatges')
     item = models.ForeignKey(
         Item,
         on_delete=models.CASCADE,
         related_name='imagenes'
     )
     es_publica = models.BooleanField(default=True)
-    es_destacada = models.BooleanField(default=False, help_text="Marcar  para que sea la imagen de portada o destacada")
+    es_destacada = models.BooleanField(default=False, help_text="Marcar  perquè sigui la imatge de portada o destacada")
 
     def __str__(self):
-        return f"Imagen de {self.item.nombre}"
+        return f"Imatge de {self.item.nom}"
 
 class Etiqueta(models.Model):
-    nombre = models.CharField(max_length=100)
+    nom = models.CharField(max_length=100)
     item = models.ForeignKey(
         Item,
         on_delete=models.CASCADE,
@@ -67,11 +67,11 @@ class Etiqueta(models.Model):
     )
 
     def __str__(self):
-        return self.nombre
+        return self.nom
 
 
 class Intents(models.Model):
-    imagen = models.ImageField(upload_to='intents')
+    imatge = models.ImageField(upload_to='intents')
     item = models.ForeignKey(
         Item,
         on_delete=models.CASCADE,
@@ -79,6 +79,6 @@ class Intents(models.Model):
     )
 
     def __str__(self):
-        return f"Intento para {self.item.nombre}"
+        return f"Intent per a {self.item.nom}"
 
 
