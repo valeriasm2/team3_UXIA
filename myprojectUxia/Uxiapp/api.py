@@ -173,29 +173,47 @@ def identify_item(request, imatge: UploadedFile = File(...)):
         )
         response.raise_for_status()
         data = response.json()
-        raw_text = data.get("response", "")
-        
-        # 4. Processar la resposta de la IA
         raw_text = data.get("response", "").strip()
+        descripcio = ""
+        etiquetes_raw = ""
         
+        # Estratègia robusta de parsing
         if "|" in raw_text:
             parts = raw_text.split("|", 1)
-            descripcio = parts[0].strip()
-            if descripcio.startswith("#"):
-                descripcio = descripcio[1:].strip()
-            # Netegem possibles prefixos que la IA pugui afegir per error
-            if descripcio.lower().startswith("descripció:"):
-                descripcio = descripcio[11:].strip()
-                
-            etiquetes_raw = parts[1].strip()
-            if etiquetes_raw.lower().startswith("etiquetes:"):
-                etiquetes_raw = etiquetes_raw[10:].strip()
-            
-            etiquetes_raw = etiquetes_raw.replace("#", ",")
-            etiquetes = [t.strip() for t in etiquetes_raw.split(",") if t.strip()]
+            descripcio = parts[0]
+            etiquetes_raw = parts[1]
         else:
-            # Fallback si no segueix el format exactament
-            descripcio = raw_text
+            hash_idx = raw_text.find("#")
+            # Si trobem '#' a la meitat del text, considerem que és on comencen les etiquetes
+            if hash_idx > 5:
+                descripcio = raw_text[:hash_idx]
+                etiquetes_raw = raw_text[hash_idx:]
+            elif "\n" in raw_text:
+                lines = [l.strip() for l in raw_text.split("\n") if l.strip()]
+                if len(lines) > 1:
+                    descripcio = "\n".join(lines[:-1])
+                    etiquetes_raw = lines[-1]
+                else:
+                    descripcio = raw_text
+            else:
+                descripcio = raw_text
+
+        # 4.1 Netejar Descripció
+        descripcio = descripcio.strip()
+        if descripcio.startswith("#"):
+            descripcio = descripcio[1:].strip()
+        if descripcio.lower().startswith("descripció:"):
+            descripcio = descripcio[11:].strip()
+            
+        # 4.2 Netejar Etiquetes
+        etiquetes_raw = etiquetes_raw.strip()
+        if etiquetes_raw.lower().startswith("etiquetes:"):
+            etiquetes_raw = etiquetes_raw[10:].strip()
+            
+        etiquetes_raw = etiquetes_raw.replace("#", ",")
+        etiquetes = [t.strip() for t in etiquetes_raw.split(",") if t.strip()]
+        
+        if not etiquetes:
             etiquetes = ["IA"]
 
         return {
