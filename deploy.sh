@@ -16,7 +16,10 @@ cd myprojectUxia/react
 npm run build
 cd ../..
 
-echo -e "${BLUE}>>> 3. Aplicant migracions de Base de Dades...${NC}"
+echo -e "${BLUE}>>> 3. Actualitzant dependències (Python)...${NC}"
+./uxia_virtual/bin/pip install -r myprojectUxia/requirements.txt
+
+echo -e "${BLUE}>>> 4. Aplicant migracions de Base de Dades...${NC}"
 # Utilitzem el python de l'entorn virtual directament
 ./uxia_virtual/bin/pip install -r requirements.txt
 ./uxia_virtual/bin/python3 myprojectUxia/manage.py migrate
