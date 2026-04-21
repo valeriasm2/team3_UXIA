@@ -21,6 +21,7 @@ class Expo(models.Model):
         default=Estado.INIT
     )
 
+
     def __str__(self):
         return self.nombre
 
