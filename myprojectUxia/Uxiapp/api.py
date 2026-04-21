@@ -151,6 +151,8 @@ def identify_item(request, imatge: UploadedFile = File(...)):
     imatge.seek(0)
     image_data = base64.b64encode(imatge.read()).decode('utf-8')
     
+    import ollama
+    
     # 3. Cridar al servei marIA 2
     prompt = (
         "Identifica aquest objecte de l'exposició. Respon en català. "
@@ -158,22 +160,19 @@ def identify_item(request, imatge: UploadedFile = File(...)):
         "Format obligatori: DESCRIPCIÓ | etiqueta1, etiqueta2, etiqueta3"
     )
     
-    payload = {
-        "model": "qwen3-vl:latest",
-        "prompt": prompt,
-        "stream": False,
-        "images": [image_data]
-    }
-    
     try:
-        response = requests.post(
-            f"{settings.OLLAMA_URL}/api/generate",
-            json=payload,
-            timeout=180
+        # Reutilitzem OLLAMA_URL de settings perquè funcioni correctament tant en local amb SSH com en producció
+        client = ollama.Client(host=settings.OLLAMA_URL)
+        response = client.chat(
+             model='qwen3-vl:30b',
+             messages=[{
+                 'role': 'user',
+                 'content': prompt,
+                 'images': [image_data]
+             }]
         )
-        response.raise_for_status()
-        data = response.json()
-        raw_text = data.get("response", "").strip()
+        
+        raw_text = response['message']['content'].strip()
         descripcio = ""
         etiquetes_raw = ""
         
