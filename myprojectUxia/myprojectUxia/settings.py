@@ -14,14 +14,14 @@ from pathlib import Path
 import os
 import environ
  
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 env = environ.Env(
     DEBUG=(bool, False)
 )
- 
+
 # Podeu deixar les instruccions que hi hagi de l'esquelet de Django
-BASE_DIR = Path(__file__).resolve().parent.parent
- 
-# llegim .env
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
  
 # variables a llegir de .env

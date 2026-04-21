@@ -67,26 +67,21 @@ class Expo(models.Model):
     """
 
     class Estat(models.TextChoices):
-        INIT = 'INIT', 'Init'
+        INIT = 'INIT', 'Inici'
         DISPONIBLE = 'DISPONIBLE', 'Disponible'
         ACTUALITZABLE = 'ACTUALITZABLE', 'Actualitzable'
 
-    nom = models.CharField(max_length=200, verbose_name="Nom")
-    descripcio = models.TextField(blank=True, verbose_name="Descripció")
-    lloc = models.CharField(max_length=200, verbose_name="Lloc")
-    data_inici = models.DateField(verbose_name="Data d'inici")
-    data_fi = models.DateField(verbose_name="Data de fi")
-    imatge_portada = models.ImageField(
-        upload_to=expo_upload,
-        blank=True,
-        null=True,
-        verbose_name="Imatge de portada"
-    )
+    nom = models.CharField(max_length=100)
+    data_inici = models.DateField()
+    data_fi = models.DateField()
+    lloc = models.CharField(max_length=100)
+    descripcio = models.TextField()
+    imatge = models.ImageField(upload_to='expos')
+
     estat = models.CharField(
         max_length=20,
         choices=Estat.choices,
-        default=Estat.INIT,
-        verbose_name="Estat"
+        default=Estat.INIT
     )
     creat_el = models.DateTimeField(auto_now_add=True)
     actualitzat_el = models.DateTimeField(auto_now=True)
@@ -97,18 +92,12 @@ class Expo(models.Model):
         ordering = ['-data_inici']
 
     def __str__(self):
-        return f"{self.nom} ({self.get_estat_display()})"
-
-
-# ─── Item ─────────────────────────────────────────────────────────────────────
+        return self.nom
 
 class Item(models.Model):
-    """
-    Element identificable dins d'una Expo (p. ex. un cotxe, una obra d'art...).
-    Té una imatge destacada pròpia i una galeria addicional via Imatge.
-    """
-    nom = models.CharField(max_length=200, verbose_name="Nom")
-    descripcio = models.TextField(blank=True, verbose_name="Descripció")
+    nom = models.CharField(max_length=100)
+    descripcio = models.TextField()
+    imatge = models.ImageField(upload_to='items')
     expo = models.ForeignKey(
         Expo,
         on_delete=models.CASCADE,
@@ -137,51 +126,27 @@ class Item(models.Model):
         ordering = ['nom']
 
     def __str__(self):
-        return f"{self.nom} [{self.expo.nom}]"
+        return self.nom
 
 
 # ─── Imatge ───────────────────────────────────────────────────────────────────
 
 class Imatge(models.Model):
-    """
-    Imatge de la galeria d'un Item.
-
-    Visibilitat:
-      es_publica=True  → Apta per mostrar al frontend.
-      es_publica=False → Exclusiva per a entrenament de la IA (privada).
-    """
-    imatge = models.ImageField(upload_to=imatge_upload, verbose_name="Arxiu d'imatge")
+    imatge = models.ImageField(upload_to='imatges')
     item = models.ForeignKey(
         Item,
         on_delete=models.CASCADE,
         related_name='imatges',
         verbose_name="Ítem"
     )
-    es_publica = models.BooleanField(
-        default=True,
-        verbose_name="Pública",
-        help_text="Pública: apta pel frontend. Privada: només per entrenar la IA."
-    )
-    ordre = models.PositiveSmallIntegerField(default=0, verbose_name="Ordre")
-    creat_el = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name = "Imatge"
-        verbose_name_plural = "Imatges"
-        ordering = ['ordre', 'creat_el']
+    es_publica = models.BooleanField(default=True)
+    es_destacada = models.BooleanField(default=False, help_text="Marcar  perquè sigui la imatge de portada o destacada")
 
     def __str__(self):
-        visibilitat = "pública" if self.es_publica else "privada"
-        return f"Imatge {visibilitat} de «{self.item.nom}»"
+        return f"Imatge de {self.item.nom}"
 
-
-# ─── Intents ──────────────────────────────────────────────────────────────────
-
-class Intent(models.Model):
-    """
-    Foto enviada per un usuari per a la identificació d'un Item via IA.
-    """
-    imatge = models.ImageField(upload_to=intent_upload, verbose_name="Foto enviada")
+class Etiqueta(models.Model):
+    nom = models.CharField(max_length=100)
     item = models.ForeignKey(
         Item,
         on_delete=models.CASCADE,
@@ -191,22 +156,22 @@ class Intent(models.Model):
     encert = models.BooleanField(
         null=True,
         blank=True,
-        verbose_name="Encert",
-        help_text="True=identificat correctament, False=incorrecte, Null=pendent de validar"
+        related_name='hijas'
     )
-    confiança = models.FloatField(
-        null=True,
-        blank=True,
-        verbose_name="Confiança IA",
-        help_text="Percentatge de confiança retornat pel model (0.0 – 1.0)"
-    )
-    creat_el = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name = "Intent"
-        verbose_name_plural = "Intents"
-        ordering = ['-creat_el']
 
     def __str__(self):
-        estat = "✓" if self.encert else ("✗" if self.encert is False else "?")
-        return f"Intent {estat} per «{self.item.nom}»"
+        return self.nom
+
+
+class Intents(models.Model):
+    imatge = models.ImageField(upload_to='intents')
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.CASCADE,
+        related_name='intentos'
+    )
+
+    def __str__(self):
+        return f"Intent per a {self.item.nom}"
+
+
