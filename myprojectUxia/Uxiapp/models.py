@@ -89,6 +89,7 @@ class Expo(models.Model):
         verbose_name_plural = "Exposicions"
         ordering = ['-data_inici']
 
+
     def __str__(self):
         return self.nom
 
