@@ -22,6 +22,18 @@ const ItemDetailModal = ({ item, close, images }) => {
             <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
               {item.nom}
             </h2>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {item.etiquetes && item.etiquetes.length > 0 ? (
+                item.etiquetes.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="px-3 py-1 bg-accent/10 border border-accent/20 rounded-full text-[10px] uppercase tracking-widest font-bold text-accent"
+                  >
+                    {tag.nom}
+                  </span>
+                ))
+              ) : null}
+            </div>
             <p className="text-accent text-sm uppercase tracking-widest font-bold">
               Especificacions i Galeria
             </p>

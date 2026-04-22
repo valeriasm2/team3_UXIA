@@ -52,7 +52,7 @@ class ItemInline(admin.TabularInline):
     model = Item
     extra = 1
     show_change_link = True
-    fields = ('nom', '_preview', 'expo')
+    fields = ('nom', 'descripcio', '_preview')
     readonly_fields = ('_preview',)
 
     @admin.display(description='Miniatura')

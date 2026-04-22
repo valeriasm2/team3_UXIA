@@ -5,7 +5,7 @@ from django.core.files import File
 from django.conf import settings
 from datetime import date, timedelta
 from faker import Faker
-from Uxiapp.models import Expo, Item, Imatge
+from Uxiapp.models import Expo, Item, Imatge, Etiqueta
 
 class Command(BaseCommand):
     help = 'Genera Expos aleatorias con Faker y asigna imágenes aleatoriamente'
@@ -72,6 +72,15 @@ class Command(BaseCommand):
                     expo=expo,
                     descripcio=f"{nombre_item} - {fake.sentence(nb_words=8)}"
                 )
+                
+                # Generar y asignar Etiquetas
+                etiqueta_marca, _ = Etiqueta.objects.get_or_create(nom="Marques")
+                etiqueta_tipus, _ = Etiqueta.objects.get_or_create(nom="Tipus de Vehicle")
+                tag_marca, _ = Etiqueta.objects.get_or_create(nom=marca, pare=etiqueta_marca)
+                tag_tipus, _ = Etiqueta.objects.get_or_create(nom=modelo, pare=etiqueta_tipus)
+                
+                item.etiquetes.add(tag_marca)
+                item.etiquetes.add(tag_tipus)
                 
                 # Asignar 2-4 imágenes aleatorias al item
                 num_imagenes = random.randint(2, 4)

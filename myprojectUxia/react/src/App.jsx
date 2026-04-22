@@ -35,13 +35,13 @@ const App = () => {
   }, [expoActual]);
 
   const verDetalleItem = async (item) => {
-    setItemSeleccionat(item);
     try {
-      const res = await fetch(`/api/imatges?item_id=${item.id}`);
+      const res = await fetch(`/api/items/${item.id}`);
       const data = await res.json();
-      setImatgesItem(data);
+      setItemSeleccionat(data);
+      setImatgesItem(data.imatges || []);
     } catch (err) {
-      console.error("Error imatges:", err);
+      console.error("Error imatges i detalls:", err);
     }
   };
 

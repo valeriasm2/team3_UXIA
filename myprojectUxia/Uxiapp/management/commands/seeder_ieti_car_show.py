@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from django.core.files import File
 from django.conf import settings
 from datetime import date
-from Uxiapp.models import Expo, Item, Imatge
+from Uxiapp.models import Expo, Item, Imatge, Etiqueta
 
 class Command(BaseCommand):
     help = 'Borra y regenera la Expo para actualizar nombres de imágenes'
@@ -45,6 +45,18 @@ class Command(BaseCommand):
                     expo=expo,
                     descripcio=f"Coche de la marca {nombre_coche}"
                 )
+
+                # Generar y asignar Etiquetas
+                import random
+                etiqueta_marca, _ = Etiqueta.objects.get_or_create(nom="Marques")
+                etiqueta_tipus, _ = Etiqueta.objects.get_or_create(nom="Tipus de Vehicle")
+                
+                tag_marca, _ = Etiqueta.objects.get_or_create(nom=nombre_coche.capitalize(), pare=etiqueta_marca)
+                item.etiquetes.add(tag_marca)
+                
+                tipus_possibles = ["Compacte", "Sedan", "SUV", "Coupé", "Esportiu", "Familiar", "Cabrio"]
+                tag_tipus, _ = Etiqueta.objects.get_or_create(nom=random.choice(tipus_possibles), pare=etiqueta_tipus)
+                item.etiquetes.add(tag_tipus)
 
                 # 4. CARGAR GALERÍA (Imatges)
                 es_primera = True
