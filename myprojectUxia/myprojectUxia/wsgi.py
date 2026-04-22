@@ -13,4 +13,11 @@ from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myprojectUxia.settings')
 
-application = get_wsgi_application()
+_application = get_wsgi_application()
+
+def application(environ, start_response):
+    script_name = environ.get('SCRIPT_NAME', '')
+    if script_name:
+        environ['PATH_INFO'] = script_name + environ.get('PATH_INFO', '')
+        environ['SCRIPT_NAME'] = ''
+    return _application(environ, start_response)
