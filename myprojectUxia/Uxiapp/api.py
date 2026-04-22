@@ -30,9 +30,18 @@ class IntentSchema(ModelSchema):
 
 
 class ItemSchema(ModelSchema):
+    imatge: Optional[str] = None
+
     class Meta:
         model = Item
         exclude = ['etiquetes']
+
+    @staticmethod
+    def resolve_imatge(obj):
+        first_img = obj.imatges.filter(es_publica=True).first()
+        if first_img:
+            return first_img.imatge.url
+        return None
 
 
 class ItemDetailSchema(ModelSchema):

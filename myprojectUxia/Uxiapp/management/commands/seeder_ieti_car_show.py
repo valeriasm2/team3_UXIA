@@ -12,18 +12,18 @@ class Command(BaseCommand):
         # 1. LIMPIEZA TOTAL
         # Al borrar la Expo, el CASCADE borra Items e Imatges automáticamente.
         self.stdout.write(self.style.WARNING('Borrando Expo "IETI CAR SHOW" y sus Items e Imatges...'))
-        Expo.objects.filter(nombre="IETI CAR SHOW").delete()
+        Expo.objects.filter(nom="IETI CAR SHOW").delete()
 
         ruta_base = os.path.join(settings.BASE_DIR, 'temp_fotos')
 
         # 2. CREAR EXPO DE NUEVO
         expo = Expo.objects.create(
-            nombre="IETI CAR SHOW",
-            fecha_inicio=date(2026, 4, 15),
-            fecha_fin=date(2026, 5, 20),
-            lugar="Campus IETI",
-            descripcion="Colección actualizada con nuevos nombres de archivo.",
-            estado=Expo.Estado.DISPONIBLE,
+            nom="IETI CAR SHOW",
+            data_inici=date(2026, 4, 15),
+            data_fi=date(2026, 5, 20),
+            lloc="Campus IETI",
+            descripcio="Colección actualizada con nuevos nombres de archivo.",
+            estat=Expo.Estat.DISPONIBLE,
         )
 
         if not os.path.exists(ruta_base):
@@ -41,9 +41,9 @@ class Command(BaseCommand):
 
                 # Crear Item
                 item = Item.objects.create(
-                    nombre=nombre_coche.capitalize(),
+                    nom=nombre_coche.capitalize(),
                     expo=expo,
-                    descripcion=f"Coche de la marca {nombre_coche}"
+                    descripcio=f"Coche de la marca {nombre_coche}"
                 )
 
                 # 4. CARGAR GALERÍA (Imatges)
@@ -52,12 +52,12 @@ class Command(BaseCommand):
                     with open(os.path.join(ruta_coche, foto), 'rb') as f:
                         nueva_img = Imatge(item=item, es_destacada=es_primera)
                         # Aquí es donde se guarda el nuevo nombre en la DB
-                        nueva_img.imagen.save(foto, File(f), save=True)
+                        nueva_img.imatge.save(foto, File(f), save=True)
                         es_primera = False
                 
                 # Imagen de portada para la Expo
-                if not expo.imagen:
+                if not expo.imatge:
                     with open(os.path.join(ruta_coche, fotos[0]), 'rb') as f:
-                        expo.imagen.save(fotos[0], File(f), save=True)
+                        expo.imatge.save(fotos[0], File(f), save=True)
 
         self.stdout.write(self.style.SUCCESS('¡Hecho! Expo "IETI CAR SHOW" ejecutada.'))
