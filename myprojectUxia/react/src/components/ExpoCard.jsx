@@ -4,7 +4,7 @@ const ExpoCard = ({ expo, onSelect }) => {
   return (
     <div
       onClick={() => onSelect(expo)}
-      className="card-estilo group cursor-pointer hover:scale-[1.02]"
+      className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow group cursor-pointer relative overflow-hidden"
     >
       <div className="aspect-video mb-4 overflow-hidden rounded-lg bg-slate-100">
         {expo.imatge ? (
@@ -22,7 +22,7 @@ const ExpoCard = ({ expo, onSelect }) => {
 
       <div className="space-y-2">
         <h3 className="text-lg font-bold text-slate-800">{expo.nom}</h3>
-        <div className="flex items-center justify-between texto-suave">
+        <div className="flex items-center justify-between text-slate-400 text-sm">
           <div className="flex items-center gap-1.5 min-w-0">
             <span>📍 {expo.lloc}</span>
           </div>

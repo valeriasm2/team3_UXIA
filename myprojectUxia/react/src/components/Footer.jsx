@@ -2,46 +2,22 @@ import React from "react";
 
 const Footer = () => {
   return (
-    <footer className="mt-auto border-t border-slate-100 bg-white py-12">
-      <div className="max-w-7xl mx-auto px-6 space-y-10">
-        {/* LOGOS SECTION */}
-        <div className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16 py-10 px-8 bg-slate-50 rounded-xl border border-slate-100">
-          <a
-            href="https://sites.google.com/xtec.cat/proyectos-de-innovacion/inicio"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-72 hover:opacity-80 transition-opacity"
-          >
-            <img
-              src="/media/logosFooter/generalitat.png"
-              alt="Generalitat de Catalunya"
-              className="w-full h-auto object-contain"
-            />
-          </a>
-          <div className="h-10 w-px bg-slate-200 hidden md:block"></div>
-          <a
-            href="https://www.boe.es/boe/dias/2023/09/01/pdfs/BOE-B-2023-24805.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-72 hover:opacity-80 transition-opacity"
-          >
-            <img
-              src="/media/logosFooter/ministerio.png"
-              alt="Ministeri d'Educació"
-              className="w-full h-auto object-contain"
-            />
-          </a>
+    <footer className="mt-auto border-t border-slate-100 bg-white/50 backdrop-blur-md py-10 px-6">
+      <div className="max-w-7xl mx-auto flex flex-col items-center gap-6">
+        <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+          <img src="/media/logo_vng.png" alt="VNG" className="h-12 w-auto" />
+          <img src="/media/logo_ieti.png" alt="IETI" className="h-10 w-auto" />
+          <img
+            src="/media/logo_lluisa_vidal.png"
+            alt="Lluïsa Vidal"
+            className="h-12 w-auto"
+          />
         </div>
-
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-8 border-t border-slate-50">
-          <div className="text-center md:text-left">
-            <p className="text-sm font-bold text-slate-800 tracking-tight">
-              UXIA <span className="text-accent">PROJECT</span>
-            </p>
-            <p className="texto-suave">
-              Assistent Intel·ligent d'Exposicions © 2026
-            </p>
-          </div>
+        <div className="text-center">
+          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest bg-slate-100 px-4 py-1 rounded-full">
+            © {new Date().getFullYear()} UXIA — Arxiu Digital de l'Exposició de
+            Vilanova
+          </p>
         </div>
       </div>
     </footer>
