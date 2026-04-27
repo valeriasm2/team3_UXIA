@@ -1,5 +1,6 @@
 // Bypassing cache 1
 import { useEffect, useState } from "react"
+import { ThemeToggle } from "./components/ThemeToggle"
 
 function App() {
   const [mensaje, setMensaje] = useState(" ")
@@ -12,6 +13,7 @@ function App() {
 
   return (
     <div>
+      <ThemeToggle />
       <h1>{mensaje}</h1>
     </div>
   )
