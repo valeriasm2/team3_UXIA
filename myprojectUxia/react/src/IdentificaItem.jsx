@@ -77,10 +77,10 @@ const IdentificaItem = () => {
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-800">
-              Identifica amb marIA
+              Escàner de Vehicles
             </h2>
             <p className="texto-suave uppercase tracking-widest text-[10px]">
-              Ollama Vision
+              Reconeixement Visual
             </p>
           </div>
         </div>
@@ -142,15 +142,14 @@ const IdentificaItem = () => {
                 onClick={startCamera}
                 disabled={loading}
               >
-                {loading ? "PROCESSANT..." : "FES UNA FOTO"}
+                {loading ? "ANALITZANT..." : "ESCANEJAR VEHICLE"}
               </button>
 
               <button
                 className="bg-white border border-slate-200 text-slate-700 w-full flex items-center justify-center gap-3 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
                 onClick={() => fileInputRef.current.click()}
-                disabled={loading}
               >
-                PUJA UNA IMATGE
+                {loading ? "ANALITZANT..." : "PUJAR FOTO"}
               </button>
 
               <input
@@ -168,7 +167,7 @@ const IdentificaItem = () => {
           <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 animate-fade-in shadow-sm">
             <div className="flex items-center gap-2 text-accent font-bold">
               <span>✨</span>
-              <span>Identificació</span>
+              <span>Identificació del Vehicle</span>
             </div>
 
             <p className="text-slate-700 leading-relaxed italic">

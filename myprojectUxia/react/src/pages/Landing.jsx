@@ -5,13 +5,22 @@ import IdentificaItem from "../IdentificaItem";
 const Landing = ({ expos, onSelectExpo }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
+  const normalize = (text) =>
+    text
+      ? text
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+      : "";
+
   const filteredExpos =
     searchTerm.length >= 3
-      ? expos.filter(
-          (expo) =>
-            expo.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            expo.lloc.toLowerCase().includes(searchTerm.toLowerCase()),
-        )
+      ? expos.filter((expo) => {
+          const s = normalize(searchTerm);
+          return (
+            normalize(expo.nom).includes(s) || normalize(expo.lloc).includes(s)
+          );
+        })
       : [];
 
   const showResults = searchTerm.length >= 3;

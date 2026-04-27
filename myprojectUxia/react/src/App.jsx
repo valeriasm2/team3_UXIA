@@ -1,73 +1,87 @@
 import React, { useState, useEffect } from "react";
+import Landing from "./pages/Landing";
+import ExpoDetail from "./pages/ExpoDetail";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ItemDetailModal from "./components/ItemDetailModal";
-import Landing from "./pages/Landing";
-import ExpoDetail from "./pages/ExpoDetail";
+import BackgroundDecoration from "./components/BackgroundDecoration";
+import { getExpos, getItems, getItemImages } from "./api";
 
 const App = () => {
   const [expos, setExpos] = useState([]);
-  const [expoActual, setExpoActual] = useState(null);
-  const [items, setItems] = useState([]);
-  const [indexItem, setIndexItem] = useState(0);
-  const [itemSeleccionat, setItemSeleccionat] = useState(null);
-  const [imatgesItem, setImatgesItem] = useState([]);
+  const [navigation, setNavigation] = useState({
+    activeExpo: null,
+    items: [],
+    index: 0,
+  });
+  const [detail, setDetail] = useState({
+    item: null,
+    images: [],
+  });
 
-  // FETCH EXPOSICIONS
+  // FETCH EXPOSICIONS AMB REFRESC AUTOMÀTIC (POLLING)
   useEffect(() => {
-    fetch("/api/expos")
-      .then((res) => res.json())
-      .then((data) => setExpos(data))
-      .catch((err) => console.error("Error expos:", err));
+    const loadExpos = () => {
+      getExpos()
+        .then(setExpos)
+        .catch((err) => console.error("Error expos:", err));
+    };
+
+    loadExpos(); // Carrega inicial
+    const interval = setInterval(loadExpos, 5000); // Refresca cada 5 segons
+
+    return () => clearInterval(interval);
   }, []);
 
   // FETCH ITEMS QUAN CANVIA L'EXPO
   useEffect(() => {
-    if (expoActual) {
-      fetch(`/api/items?expo_id=${expoActual.id}`)
-        .then((res) => res.json())
+    if (navigation.activeExpo) {
+      getItems(navigation.activeExpo.id)
         .then((data) => {
-          setItems(data);
-          setIndexItem(0);
+          setNavigation((prev) => ({ ...prev, items: data, index: 0 }));
         })
         .catch((err) => console.error("Error items:", err));
     }
-  }, [expoActual]);
+  }, [navigation.activeExpo]);
 
   const verDetalleItem = async (item) => {
-    setItemSeleccionat(item);
     try {
-      const res = await fetch(`/api/imatges?item_id=${item.id}`);
-      const data = await res.json();
-      setImatgesItem(data);
+      const data = await getItemImages(item.id);
+      setDetail({ item, images: data });
     } catch (err) {
       console.error("Error imatges:", err);
+      setDetail({ item, images: [] });
     }
   };
 
   return (
     <div className="min-h-screen bg-background text-slate-800 selection:bg-accent selection:text-white">
-      {/* BACKGROUND DECORATION */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-20 z-0">
-        <div className="absolute top-0 -left-1/4 w-1/2 h-full bg-accent/10 blur-[120px] rounded-full transform -rotate-12"></div>
-        <div className="absolute bottom-0 -right-1/4 w-1/2 h-full bg-accent/10 blur-[120px] rounded-full transform rotate-12"></div>
-      </div>
+      <BackgroundDecoration />
 
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header />
 
         <main className="grow">
-          {expoActual ? (
+          {navigation.activeExpo ? (
             <ExpoDetail
-              expo={expoActual}
-              items={items}
-              indexItem={indexItem}
-              setIndexItem={setIndexItem}
-              onBack={() => setExpoActual(null)}
+              expo={navigation.activeExpo}
+              items={navigation.items}
+              indexItem={navigation.index}
+              setIndexItem={(index) =>
+                setNavigation((prev) => ({ ...prev, index }))
+              }
+              onBack={() =>
+                setNavigation({ activeExpo: null, items: [], index: 0 })
+              }
               verDetalleItem={verDetalleItem}
             />
           ) : (
-            <Landing expos={expos} onSelectExpo={setExpoActual} />
+            <Landing
+              expos={expos}
+              onSelectExpo={(expo) =>
+                setNavigation({ activeExpo: expo, items: [], index: 0 })
+              }
+            />
           )}
         </main>
 
@@ -75,11 +89,11 @@ const App = () => {
       </div>
 
       {/* MODAL */}
-      {itemSeleccionat && (
+      {detail.item && (
         <ItemDetailModal
-          item={itemSeleccionat}
-          close={() => setItemSeleccionat(null)}
-          images={imatgesItem}
+          item={detail.item}
+          close={() => setDetail({ item: null, images: [] })}
+          images={detail.images}
         />
       )}
     </div>
