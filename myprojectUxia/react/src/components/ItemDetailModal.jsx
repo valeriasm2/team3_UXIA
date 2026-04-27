@@ -12,7 +12,7 @@ const ItemDetailModal = ({ item, close, images }) => {
       <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl border border-slate-100 dark:border-slate-700 p-8 sm:p-12 transition-colors">
         <button
           onClick={close}
-          className="absolute top-6 right-6 boton-icon w-10 h-10 flex items-center justify-center z-20"
+          className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center z-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-full shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95"
         >
           ✕
         </button>
@@ -60,7 +60,10 @@ const ItemDetailModal = ({ item, close, images }) => {
           </div>
 
           <div className="pt-6 flex justify-end">
-            <button onClick={close} className="boton-principal">
+            <button
+              onClick={close}
+              className="bg-accent text-white font-semibold py-2 px-6 rounded-lg hover:bg-accent-dark transition-colors"
+            >
               Tancar galeria
             </button>
           </div>

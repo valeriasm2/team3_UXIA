@@ -20,13 +20,13 @@ const ExpoDetail = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8 animate-fade-in space-y-12">
+    <div className="max-w-7xl mx-auto px-6 py-8 space-y-12">
       {/* EXPO HEADER & NAV */}
       <div className="flex flex-col sm:flex-row items-center gap-6 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
         <div className="order-2 sm:order-1">
           <button
             onClick={onBack}
-            className="boton-icon flex items-center gap-2 px-4 py-2 font-bold text-xs uppercase"
+            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 p-4 rounded-full shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 flex items-center gap-2 px-4 py-2 font-bold text-xs uppercase"
           >
             ← Tornar
           </button>
@@ -36,7 +36,7 @@ const ExpoDetail = ({
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white uppercase tracking-tight">
             {expo.nom}
           </h2>
-          <div className="flex flex-wrap justify-center sm:justify-start gap-4 texto-suave font-bold uppercase tracking-wider">
+          <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-slate-400 dark:text-slate-500 text-sm font-bold uppercase tracking-wider">
             <span>📍 {expo.lloc}</span>
             <span className="text-slate-200 dark:text-slate-700">|</span>
             <span>
@@ -59,7 +59,7 @@ const ExpoDetail = ({
           <div className="lg:hidden absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-2 z-20 pointer-events-none">
             <button
               onClick={anteriorItem}
-              className="boton-icon w-12 h-12 shadow-xl pointer-events-auto bg-white/90 dark:bg-slate-800/90"
+              className="bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 p-4 rounded-full shadow-xl hover:bg-white dark:hover:bg-slate-700 transition-all active:scale-95 w-12 h-12 pointer-events-auto"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -78,7 +78,7 @@ const ExpoDetail = ({
             </button>
             <button
               onClick={seguentItem}
-              className="boton-icon w-12 h-12 shadow-xl pointer-events-auto bg-white/90 dark:bg-slate-800/90"
+              className="bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 p-4 rounded-full shadow-xl hover:bg-white dark:hover:bg-slate-700 transition-all active:scale-95 w-12 h-12 pointer-events-auto"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -100,7 +100,10 @@ const ExpoDetail = ({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* DESKTOP LEFT ARROW */}
             <div className="hidden lg:flex lg:col-span-1 justify-center">
-              <button onClick={anteriorItem} className="boton-icon text-2xl">
+              <button
+                onClick={anteriorItem}
+                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 p-4 rounded-full shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 text-2xl"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-8 w-8"
@@ -120,7 +123,7 @@ const ExpoDetail = ({
 
             <div className="lg:col-span-10">
               <div
-                className="card-estilo overflow-hidden group cursor-pointer hover:border-accent/40"
+                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm hover:shadow-md dark:hover:shadow-lg transition-shadow overflow-hidden group cursor-pointer hover:border-accent/40"
                 onClick={() => verDetalleItem(itemActual)}
               >
                 <div className="aspect-video sm:aspect-21/9 overflow-hidden -m-6 mb-6 bg-slate-100 dark:bg-slate-700 flex items-center justify-center relative">
@@ -158,7 +161,10 @@ const ExpoDetail = ({
 
             {/* DESKTOP RIGHT ARROW */}
             <div className="hidden lg:flex lg:col-span-1 justify-center">
-              <button onClick={seguentItem} className="boton-icon text-2xl">
+              <button
+                onClick={seguentItem}
+                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 p-4 rounded-full shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 text-2xl"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-8 w-8"

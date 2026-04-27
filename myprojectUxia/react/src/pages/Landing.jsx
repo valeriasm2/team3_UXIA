@@ -17,14 +17,14 @@ const Landing = ({ expos, onSelectExpo }) => {
   const showResults = searchTerm.length >= 3;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12 animate-slide-up space-y-16">
+    <div className="max-w-7xl mx-auto px-6 py-12 space-y-16">
       {/* SEARCH SECTION */}
       <section className="space-y-12">
         <div className="text-center space-y-4 max-w-2xl mx-auto">
           <h2 className="text-4xl font-extrabold text-slate-900 dark:text-white">
             Explora UXIA
           </h2>
-          <p className="texto-suave">
+          <p className="text-slate-400 dark:text-slate-500 text-sm">
             Busca una ciutat o esdeveniment per veure els cotxes de l'exposició.
           </p>
 
@@ -66,7 +66,7 @@ const Landing = ({ expos, onSelectExpo }) => {
 
         {/* RESULTS SECTION - Only shown if searchTerm >= 3 */}
         {showResults ? (
-          <div className="space-y-12 animate-fade-in">
+          <div className="space-y-12">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Resultats ({filteredExpos.length})
@@ -89,7 +89,7 @@ const Landing = ({ expos, onSelectExpo }) => {
               </div>
             ) : (
               <div className="text-center py-16 bg-slate-50 dark:bg-slate-800 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                <p className="texto-suave">
+                <p className="text-slate-400 dark:text-slate-500 text-sm">
                   No hi ha coincidències per "{searchTerm}"
                 </p>
               </div>
@@ -112,7 +112,7 @@ const Landing = ({ expos, onSelectExpo }) => {
           <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
             No saps quin cotxe és?
           </h2>
-          <p className="texto-suave">
+          <p className="text-slate-400 dark:text-slate-500 text-sm">
             Utilitza la nostra identificació visual "marIA"
           </p>
         </div>

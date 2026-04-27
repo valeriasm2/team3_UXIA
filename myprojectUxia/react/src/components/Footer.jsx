@@ -38,7 +38,7 @@ const Footer = () => {
             <p className="text-sm font-bold text-slate-800 dark:text-white tracking-tight">
               UXIA <span className="text-accent">PROJECT</span>
             </p>
-            <p className="texto-suave">
+            <p className="text-slate-400 dark:text-slate-500 text-sm">
               Assistent Intel·ligent d'Exposicions © 2026
             </p>
           </div>
