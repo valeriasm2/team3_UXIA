@@ -6,10 +6,10 @@ const ItemDetailModal = ({ item, close, images }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-fade-in">
       <div
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/40 dark:bg-slate-900/60 backdrop-blur-sm"
         onClick={close}
       />
-      <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl border border-slate-100 p-8 sm:p-12">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl border border-slate-100 dark:border-slate-700 p-8 sm:p-12 transition-colors">
         <button
           onClick={close}
           className="absolute top-6 right-6 boton-icon w-10 h-10 flex items-center justify-center z-20"
@@ -19,7 +19,7 @@ const ItemDetailModal = ({ item, close, images }) => {
 
         <div className="space-y-10">
           <div>
-            <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
+            <h2 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
               {item.nom}
             </h2>
             <p className="text-accent text-sm uppercase tracking-widest font-bold">
@@ -27,14 +27,14 @@ const ItemDetailModal = ({ item, close, images }) => {
             </p>
           </div>
 
-          <div className="border-l-4 border-slate-100 pl-6 py-2">
-            <p className="text-slate-600 leading-relaxed text-xl italic">
+          <div className="border-l-4 border-slate-100 dark:border-slate-700 pl-6 py-2">
+            <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-xl italic">
               "{item.descripcio}"
             </p>
           </div>
 
           <div className="space-y-6">
-            <h3 className="text-xs uppercase tracking-widest font-bold text-slate-400">
+            <h3 className="text-xs uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">
               Galeria Multimèdia
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -42,7 +42,7 @@ const ItemDetailModal = ({ item, close, images }) => {
                 images.map((img) => (
                   <div
                     key={img.id}
-                    className="relative group overflow-hidden rounded-xl bg-slate-50 aspect-video border border-slate-100 shadow-sm"
+                    className="relative group overflow-hidden rounded-xl bg-slate-50 dark:bg-slate-700 aspect-video border border-slate-100 dark:border-slate-700 shadow-sm"
                   >
                     <img
                       src={img.imatge}
@@ -52,7 +52,7 @@ const ItemDetailModal = ({ item, close, images }) => {
                   </div>
                 ))
               ) : (
-                <div className="col-span-full py-16 text-center border-2 border-dashed border-slate-200 rounded-xl text-slate-300">
+                <div className="col-span-full py-16 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-slate-300 dark:text-slate-600">
                   No hi ha imatges addicionals disponibles
                 </div>
               )}

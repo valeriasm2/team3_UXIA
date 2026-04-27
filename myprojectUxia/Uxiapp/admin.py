@@ -196,6 +196,9 @@ class IntentAdmin(admin.ModelAdmin):
         (None, {
             'fields': ('item', 'imatge', '_preview_gran', 'encert', 'confiança')
         }),
+        ('Dades de la IA', {
+            'fields': ('descripcio_ia', 'etiquetes_ia')
+        }),
     )
 
     @admin.display(description='Resultat')

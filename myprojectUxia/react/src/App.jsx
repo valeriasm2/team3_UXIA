@@ -7,6 +7,17 @@ import Footer from "./components/Footer";
 import ItemDetailModal from "./components/ItemDetailModal";
 import Landing from "./pages/Landing";
 import ExpoDetail from "./pages/ExpoDetail";
+import { ThemeContext, useThemeLogic } from "./hooks/useTheme";
+
+const AppContent = ({ children }) => {
+  const { isDark, toggleTheme } = useThemeLogic();
+
+  return (
+    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
 
 const App = () => {
   const [expos, setExpos] = useState([]);
@@ -49,43 +60,45 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-slate-800 selection:bg-accent selection:text-white">
-      {/* BACKGROUND DECORATION */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-20 z-0">
-        <div className="absolute top-0 -left-1/4 w-1/2 h-full bg-accent/10 blur-[120px] rounded-full transform -rotate-12"></div>
-        <div className="absolute bottom-0 -right-1/4 w-1/2 h-full bg-accent/10 blur-[120px] rounded-full transform rotate-12"></div>
+    <AppContent>
+      <div className="min-h-screen bg-background dark:bg-slate-950 text-slate-800 dark:text-slate-100 selection:bg-accent selection:text-white transition-colors">
+        {/* BACKGROUND DECORATION */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-20 z-0">
+          <div className="absolute top-0 -left-1/4 w-1/2 h-full bg-accent/10 blur-[120px] rounded-full transform -rotate-12"></div>
+          <div className="absolute bottom-0 -right-1/4 w-1/2 h-full bg-accent/10 blur-[120px] rounded-full transform rotate-12"></div>
+        </div>
+
+        <div className="relative z-10 flex flex-col min-h-screen">
+          <Header />
+
+          <main className="grow">
+            {expoActual ? (
+              <ExpoDetail
+                expo={expoActual}
+                items={items}
+                indexItem={indexItem}
+                setIndexItem={setIndexItem}
+                onBack={() => setExpoActual(null)}
+                verDetalleItem={verDetalleItem}
+              />
+            ) : (
+              <Landing expos={expos} onSelectExpo={setExpoActual} />
+            )}
+          </main>
+
+          <Footer />
+        </div>
+
+        {/* MODAL */}
+        {itemSeleccionat && (
+          <ItemDetailModal
+            item={itemSeleccionat}
+            close={() => setItemSeleccionat(null)}
+            images={imatgesItem}
+          />
+        )}
       </div>
-
-      <div className="relative z-10 flex flex-col min-h-screen">
-        <Header />
-
-        <main className="grow">
-          {expoActual ? (
-            <ExpoDetail
-              expo={expoActual}
-              items={items}
-              indexItem={indexItem}
-              setIndexItem={setIndexItem}
-              onBack={() => setExpoActual(null)}
-              verDetalleItem={verDetalleItem}
-            />
-          ) : (
-            <Landing expos={expos} onSelectExpo={setExpoActual} />
-          )}
-        </main>
-
-        <Footer />
-      </div>
-
-      {/* MODAL */}
-      {itemSeleccionat && (
-        <ItemDetailModal
-          item={itemSeleccionat}
-          close={() => setItemSeleccionat(null)}
-          images={imatgesItem}
-        />
-      )}
-    </div>
+    </AppContent>
   );
 };
 
