@@ -1,15 +1,52 @@
 import { useState, useRef } from "react";
+import { identifyItem } from "./api";
 
 const IdentificaItem = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [isCamera, setIsCamera] = useState(false);
   const fileInputRef = useRef(null);
+  const videoRef = useRef(null);
 
-  const handleCapture = (e) => {
+  const startCamera = async () => {
+    setIsCamera(true);
+    setPreview(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) videoRef.current.srcObject = stream;
+    } catch (err) {
+      console.error(err);
+      setIsCamera(false);
+    }
+  };
+
+  const capturePhoto = () => {
+    const video = videoRef.current;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+
+    const dataUrl = canvas.toDataURL("image/jpeg");
+    setPreview(dataUrl);
+
+    // Convert to file and send
+    canvas.toBlob((blob) => {
+      const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+      identifyImage(file);
+    }, "image/jpeg");
+
+    // Stop camera
+    video.srcObject.getTracks().forEach((t) => t.stop());
+    setIsCamera(false);
+  };
+
+  const handleFile = (e) => {
     const file = e.target.files[0];
     if (file) {
       setPreview(URL.createObjectURL(file));
+      setIsCamera(false);
       identifyImage(file);
     }
   };
@@ -17,23 +54,8 @@ const IdentificaItem = () => {
   const identifyImage = async (file) => {
     setLoading(true);
     setResult(null);
-    const formData = new FormData();
-    formData.append("imatge", file);
-
     try {
-      const response = await fetch("/api/identify", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Error del servidor (${response.status}): ${errorText.substring(0, 50)}`,
-        );
-      }
-
-      const data = await response.json();
+      const data = await identifyItem(file);
       setResult(data);
     } catch (error) {
       console.error("Error identificant ítem:", error);
@@ -65,18 +87,35 @@ const IdentificaItem = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
           <div className="relative aspect-video bg-slate-200 rounded-xl overflow-hidden border border-slate-300">
-            {preview ? (
+            {isCamera ? (
+              <div className="relative h-full w-full bg-black">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  onClick={capturePhoto}
+                  className="absolute bottom-4 left-1/2 -translate-x-1/2 w-12 h-12 bg-white rounded-full border-4 border-accent shadow-lg"
+                />
+              </div>
+            ) : preview ? (
               <div className="relative h-full w-full">
                 <img
                   src={preview}
                   alt="Preview"
                   className="w-full h-full object-cover"
                 />
+                <button
+                  onClick={() => setPreview(null)}
+                  className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full"
+                >
+                  ✕
+                </button>
                 {loading && (
-                  <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] flex items-center justify-center">
-                    <div className="text-accent font-bold text-xs uppercase tracking-widest">
-                      Analitzant...
-                    </div>
+                  <div className="absolute inset-0 bg-white/40 flex items-center justify-center font-bold text-accent">
+                    Analitzant...
                   </div>
                 )}
               </div>
@@ -100,24 +139,27 @@ const IdentificaItem = () => {
             <div className="flex flex-col gap-3">
               <button
                 className="boton-principal w-full flex items-center justify-center gap-3 py-3"
+                onClick={startCamera}
+                disabled={loading}
+              >
+                {loading ? "PROCESSANT..." : "FES UNA FOTO"}
+              </button>
+
+              <button
+                className="bg-white border border-slate-200 text-slate-700 w-full flex items-center justify-center gap-3 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
                 onClick={() => fileInputRef.current.click()}
                 disabled={loading}
               >
-                {loading ? "PROCESSANT..." : "IDENTIFICAR COTXE"}
+                PUJA UNA IMATGE
               </button>
 
               <input
                 type="file"
                 accept="image/*"
-                capture="environment"
                 ref={fileInputRef}
-                onChange={handleCapture}
+                onChange={handleFile}
                 className="hidden"
               />
-
-              <p className="text-[10px] text-white/30 text-center uppercase tracking-widest italic">
-                Optimitzat per a dispositius mòbils amb càmera HD
-              </p>
             </div>
           </div>
         </div>
