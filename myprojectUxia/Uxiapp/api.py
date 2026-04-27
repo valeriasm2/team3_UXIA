@@ -1,4 +1,4 @@
-from ninja import NinjaAPI, ModelSchema, Schema, File
+from ninja import NinjaAPI, ModelSchema, Schema, File, Form
 from ninja.files import UploadedFile
 from typing import List, Optional
 import base64
@@ -60,6 +60,13 @@ class ExpoSchema(ModelSchema):
         fields = '__all__'
 
 
+class CreateItemSchema(Schema):
+    nom: str
+    descripcio: str
+    expo_id: int
+    etiquetes_ids: List[int] = []
+
+
 class ExpoDetailSchema(ModelSchema):
     items: List[ItemSchema] = []
 
@@ -109,6 +116,44 @@ def list_items(request, expo_id: Optional[int] = None, etiqueta_id: Optional[int
 @api.get("/items/{item_id}", response=ItemDetailSchema, tags=["Ítems"])
 def get_item(request, item_id: int):
     return Item.objects.prefetch_related('etiquetes', 'imatges', 'intents').get(pk=item_id)
+
+
+@api.post("/items", response=ItemSchema, tags=["Ítems"])
+def create_item(request, data: CreateItemSchema = Form(...), imatges: List[UploadedFile] = File(None)):
+    """
+    Crea un nou ítem, li assigna etiquetes i, si n'hi ha, puja les seves imatges.
+    Si s'afegeixen imatges, l'estat de l'exposició passa a 'ACTUALITZABLE'.
+    """
+    # 1. Crear l'ítem
+    item = Item.objects.create(
+        nom=data.nom,
+        descripcio=data.descripcio,
+        expo_id=data.expo_id
+    )
+
+    # 2. Assignar etiquetes
+    if data.etiquetes_ids:
+        etiquetes = Etiqueta.objects.filter(id__in=data.etiquetes_ids)
+        item.etiquetes.set(etiquetes)
+
+    # 3. Gestionar imatges
+    if imatges:
+        for idx, img_file in enumerate(imatges):
+            Imatge.objects.create(
+                imatge=img_file,
+                item=item,
+                ordre=idx,
+                es_publica=True,
+                es_destacada=(idx == 0) # La primera imatge serà la destacada per defecte
+            )
+        
+        # 4. Actualitzar estat de l'expo si s'han afegit imatges
+        expo = item.expo
+        if expo.estat != Expo.Estat.ACTUALITZABLE:
+            expo.estat = Expo.Estat.ACTUALITZABLE
+            expo.save()
+
+    return item
 
 
 # ─── Endpoints: Imatges ───────────────────────────────────────────────────────
