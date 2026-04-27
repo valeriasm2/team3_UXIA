@@ -60,6 +60,14 @@ class ExpoSchema(ModelSchema):
         fields = '__all__'
 
 
+class UpdateExpoSchema(Schema):
+    nom: Optional[str] = None
+    lloc: Optional[str] = None
+    descripcio: Optional[str] = None
+    data_inici: Optional[str] = None
+    data_fi: Optional[str] = None
+
+
 class CreateItemSchema(Schema):
     nom: str
     descripcio: str
@@ -99,6 +107,26 @@ def list_expos(request, estat: Optional[str] = None):
 @api.get("/expos/{expo_id}", response=ExpoDetailSchema, tags=["Exposicions"])
 def get_expo(request, expo_id: int):
     return Expo.objects.prefetch_related('items').get(pk=expo_id)
+
+
+@api.put("/expos/{expo_id}", response=ExpoSchema, tags=["Exposicions"])
+def update_expo(request, expo_id: int, data: UpdateExpoSchema = Form(...), imatge: UploadedFile = File(None)):
+    """
+    Actualitza els detalls d'una exposició.
+    """
+    expo = Expo.objects.get(pk=expo_id)
+    
+    # Actualitzar camps de text si s'han enviat
+    for attr, value in data.dict().items():
+        if value is not None:
+            setattr(expo, attr, value)
+    
+    # Actualitzar imatge si s'ha enviat
+    if imatge:
+        expo.imatge = imatge
+        
+    expo.save()
+    return expo
 
 
 # ─── Endpoints: Items ─────────────────────────────────────────────────────────
