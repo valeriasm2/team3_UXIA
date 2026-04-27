@@ -75,6 +75,12 @@ class CreateItemSchema(Schema):
     etiquetes_ids: List[int] = []
 
 
+class UpdateItemSchema(Schema):
+    nom: Optional[str] = None
+    descripcio: Optional[str] = None
+    etiquetes_ids: Optional[List[int]] = None
+
+
 class ExpoDetailSchema(ModelSchema):
     items: List[ItemSchema] = []
 
@@ -176,6 +182,46 @@ def create_item(request, data: CreateItemSchema = Form(...), imatges: List[Uploa
             )
         
         # 4. Actualitzar estat de l'expo si s'han afegit imatges
+        expo = item.expo
+        if expo.estat != Expo.Estat.ACTUALITZABLE:
+            expo.estat = Expo.Estat.ACTUALITZABLE
+            expo.save()
+
+    return item
+
+
+@api.put("/items/{item_id}", response=ItemSchema, tags=["Ítems"])
+def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatges: List[UploadedFile] = File(None)):
+    """
+    Actualitza els detalls d'un ítem existent.
+    """
+    item = Item.objects.get(pk=item_id)
+    
+    # 1. Actualitzar camps de text si s'han enviat
+    if data.nom is not None:
+        item.nom = data.nom
+    if data.descripcio is not None:
+        item.descripcio = data.descripcio
+        
+    # 2. Actualitzar etiquetes si s'ha enviat la llista
+    if data.etiquetes_ids is not None:
+        etiquetes = Etiqueta.objects.filter(id__in=data.etiquetes_ids)
+        item.etiquetes.set(etiquetes)
+        
+    item.save()
+
+    # 3. Gestionar noves imatges si n'hi ha
+    if imatges:
+        for idx, img_file in enumerate(imatges):
+            Imatge.objects.create(
+                imatge=img_file,
+                item=item,
+                ordre=item.imatges.count(),
+                es_publica=True,
+                es_destacada=False
+            )
+        
+        # 4. Actualitzar estat de l'expo
         expo = item.expo
         if expo.estat != Expo.Estat.ACTUALITZABLE:
             expo.estat = Expo.Estat.ACTUALITZABLE
