@@ -1,6 +1,3 @@
-// Bypassing cache 1
-import { useEffect, useState } from "react"
-import { ThemeToggle } from "./components/ThemeToggle"
 import React, { useState, useEffect } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";

@@ -166,8 +166,6 @@ html.dark-mode #social .button-icon {
   }
 }
 
-body {
-  margin: 0;
 @layer base {
   body {
     @apply bg-background dark:bg-slate-950 text-slate-700 dark:text-slate-100 font-sans antialiased transition-colors duration-200;
