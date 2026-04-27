@@ -1,5 +1,48 @@
 @import "tailwindcss";
 
+/* ========== VARIABLES CSS PARA MODOS CLARO/OSCURO ========== */
+:root {
+  /* MODO CLARO */
+  --bg-primary: #faf9f6;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f5f3f0;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --border-color: #e5e7eb;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* MODO OSCURO */
+.dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: #475569;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Media query para detectar preferencia del sistema */
+@media (prefers-color-scheme: dark) {
+  /* Si el usuario no ha establecido preferencia manual, usamos la del sistema */
+  :not(.light) {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: #475569;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+}
+
 @theme {
   /* Paleta Beige / Crema */
   --color-background: #faf9f6;
@@ -33,13 +76,13 @@
 
 @layer base {
   body {
-    @apply bg-background text-slate-700 font-sans antialiased;
+    @apply bg-background dark:bg-slate-950 text-slate-700 dark:text-slate-100 font-sans antialiased transition-colors duration-200;
   }
 }
 
 /* Estilos de carta limpios con bordes suaves */
 .card-estilo {
-  @apply bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow;
+  @apply bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm hover:shadow-md dark:hover:shadow-lg transition-shadow;
 }
 
 /* Botón estilo beige oscuro / terroso */
@@ -49,9 +92,9 @@
 
 /* Botones de navegación (flechas) más visibles */
 .boton-icon {
-  @apply bg-white border border-slate-200 text-slate-800 p-4 rounded-full shadow-sm hover:bg-slate-50 transition-all active:scale-95;
+  @apply bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 p-4 rounded-full shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95;
 }
 
 .texto-suave {
-  @apply text-slate-400 text-sm;
+  @apply text-slate-400 dark:text-slate-500 text-sm;
 }

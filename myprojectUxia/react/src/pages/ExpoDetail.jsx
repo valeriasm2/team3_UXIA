@@ -22,7 +22,7 @@ const ExpoDetail = ({
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 animate-fade-in space-y-12">
       {/* EXPO HEADER & NAV */}
-      <div className="flex flex-col sm:flex-row items-center gap-6 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+      <div className="flex flex-col sm:flex-row items-center gap-6 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
         <div className="order-2 sm:order-1">
           <button
             onClick={onBack}
@@ -33,12 +33,12 @@ const ExpoDetail = ({
         </div>
 
         <div className="order-1 sm:order-2 text-center sm:text-left flex-1 space-y-1">
-          <h2 className="text-3xl font-extrabold text-slate-900 uppercase tracking-tight">
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white uppercase tracking-tight">
             {expo.nom}
           </h2>
           <div className="flex flex-wrap justify-center sm:justify-start gap-4 texto-suave font-bold uppercase tracking-wider">
             <span>📍 {expo.lloc}</span>
-            <span className="text-slate-200">|</span>
+            <span className="text-slate-200 dark:text-slate-700">|</span>
             <span>
               📅 {expo.data_inici} — {expo.data_fi}
             </span>
@@ -59,7 +59,7 @@ const ExpoDetail = ({
           <div className="lg:hidden absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-2 z-20 pointer-events-none">
             <button
               onClick={anteriorItem}
-              className="boton-icon w-12 h-12 shadow-xl pointer-events-auto bg-white/90"
+              className="boton-icon w-12 h-12 shadow-xl pointer-events-auto bg-white/90 dark:bg-slate-800/90"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -78,7 +78,7 @@ const ExpoDetail = ({
             </button>
             <button
               onClick={seguentItem}
-              className="boton-icon w-12 h-12 shadow-xl pointer-events-auto bg-white/90"
+              className="boton-icon w-12 h-12 shadow-xl pointer-events-auto bg-white/90 dark:bg-slate-800/90"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -123,7 +123,7 @@ const ExpoDetail = ({
                 className="card-estilo overflow-hidden group cursor-pointer hover:border-accent/40"
                 onClick={() => verDetalleItem(itemActual)}
               >
-                <div className="aspect-video sm:aspect-21/9 overflow-hidden -m-6 mb-6 bg-slate-100 flex items-center justify-center relative">
+                <div className="aspect-video sm:aspect-21/9 overflow-hidden -m-6 mb-6 bg-slate-100 dark:bg-slate-700 flex items-center justify-center relative">
                   {itemActual.imatge ? (
                     <img
                       src={itemActual.imatge}
@@ -131,7 +131,7 @@ const ExpoDetail = ({
                       className="w-full h-full object-contain transform transition-transform duration-1000 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="text-slate-200 text-lg font-black uppercase tracking-widest">
+                    <div className="text-slate-200 dark:text-slate-600 text-lg font-black uppercase tracking-widest">
                       Sense imatge
                     </div>
                   )}
@@ -142,14 +142,14 @@ const ExpoDetail = ({
 
                 <div className="space-y-4 pt-4">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
-                    <h3 className="text-3xl sm:text-4xl font-black tracking-tighter text-slate-900 leading-none">
+                    <h3 className="text-3xl sm:text-4xl font-black tracking-tighter text-slate-900 dark:text-white leading-none">
                       {itemActual.nom}
                     </h3>
                     <button className="text-accent text-[10px] font-black tracking-[0.2em] border-b border-accent pb-1 hover:text-accent-dark hover:border-accent-dark transition-colors self-start sm:self-auto">
                       VEURE DETALLS +
                     </button>
                   </div>
-                  <p className="text-slate-500 leading-relaxed text-lg line-clamp-2 italic">
+                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-lg line-clamp-2 italic">
                     "{itemActual.descripcio}"
                   </p>
                 </div>
@@ -178,8 +178,8 @@ const ExpoDetail = ({
           </div>
         </div>
       ) : (
-        <div className="text-center py-32 bg-white/5 rounded-[40px] border border-dashed border-white/5">
-          <p className="text-white/20 font-black uppercase tracking-widest">
+        <div className="text-center py-32 bg-slate-50/5 dark:bg-slate-800/5 rounded-[40px] border border-dashed border-slate-200/10 dark:border-slate-700/10">
+          <p className="text-slate-400 dark:text-slate-600 font-black uppercase tracking-widest">
             No hi ha vehicles en aquesta exposició
           </p>
         </div>
