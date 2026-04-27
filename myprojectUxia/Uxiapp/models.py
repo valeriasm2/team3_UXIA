@@ -16,7 +16,9 @@ def imatge_upload(instance, filename):
 
 
 def intent_upload(instance, filename):
-    return f"intents/{instance.item_id}/{filename}"
+    if instance.item_id:
+        return f"intents/{instance.item_id}/{filename}"
+    return f"intents/unknown/{filename}"
 
 
 # ─── Etiqueta (tag) ────────────────────────────────────────────────────
@@ -87,6 +89,7 @@ class Expo(models.Model):
         verbose_name_plural = "Exposicions"
         ordering = ['-data_inici']
 
+
     def __str__(self):
         return self.nom
 
@@ -96,19 +99,11 @@ class Expo(models.Model):
 class Item(models.Model):
     nom = models.CharField(max_length=100, verbose_name="Nom")
     descripcio = models.TextField(verbose_name="Descripció")
-    imatge = models.ImageField(upload_to=item_upload, verbose_name="Imatge")
     expo = models.ForeignKey(
         Expo,
         on_delete=models.CASCADE,
         related_name='items',
         verbose_name="Exposició"
-    )
-    imatge_destacada = models.ImageField(
-        upload_to=item_upload,
-        blank=True,
-        null=True,
-        verbose_name="Imatge destacada",
-        help_text="Imatge principal de l'ítem, mostrada al llistat i la fitxa."
     )
     etiquetes = models.ManyToManyField(
         Etiqueta,
@@ -168,6 +163,8 @@ class Intent(models.Model):
         Item,
         on_delete=models.CASCADE,
         related_name='intents',
+        null=True,
+        blank=True,
         verbose_name="Ítem identificat"
     )
     encert = models.BooleanField(

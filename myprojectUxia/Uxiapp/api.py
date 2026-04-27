@@ -1,5 +1,9 @@
-from ninja import NinjaAPI, ModelSchema, Schema
+from ninja import NinjaAPI, ModelSchema, Schema, File
+from ninja.files import UploadedFile
 from typing import List, Optional
+import base64
+import requests
+from django.conf import settings
 from .models import Expo, Item, Imatge, Etiqueta, Intent
 
 api = NinjaAPI(title="UXIA API", version="2.0")
@@ -26,9 +30,18 @@ class IntentSchema(ModelSchema):
 
 
 class ItemSchema(ModelSchema):
+    imatge: Optional[str] = None
+
     class Meta:
         model = Item
         exclude = ['etiquetes']
+
+    @staticmethod
+    def resolve_imatge(obj):
+        first_img = obj.imatges.filter(es_publica=True).first()
+        if first_img:
+            return first_img.imatge.url
+        return None
 
 
 class ItemDetailSchema(ModelSchema):
@@ -53,6 +66,12 @@ class ExpoDetailSchema(ModelSchema):
     class Meta:
         model = Expo
         fields = '__all__'
+
+
+class IdentifyResponseSchema(Schema):
+    descripcio: str
+    etiquetes: List[str]
+    intent_id: int
 
 
 # ─── Endpoints: Expos ─────────────────────────────────────────────────────────
@@ -126,3 +145,101 @@ def list_intents(request, item_id: Optional[int] = None, encert: Optional[bool] 
     if encert is not None:
         qs = qs.filter(encert=encert)
     return qs
+# ─── Endpoints: IA (marIA 2) ──────────────────────────────────────────────────
+
+@api.post("/identify", response=IdentifyResponseSchema, tags=["IA"])
+def identify_item(request, imatge: UploadedFile = File(...)):
+    """
+    Identifica un ítem a partir d'una foto mitjançant marIA 2 (Ollama).
+    Enregistra l'intent i retorna la descripció i etiquetes generades.
+    """
+    # 1. Enregistrar l'intent al servidor
+    intent = Intent.objects.create(imatge=imatge)
+    
+    # 2. Preparar imatge per a Ollama (Base64)
+    imatge.seek(0)
+    image_data = base64.b64encode(imatge.read()).decode('utf-8')
+    
+    import ollama
+    
+    # 3. Cridar al servei marIA 2
+    prompt = (
+        "Identifica aquest objecte de l'exposició. Respon en català. "
+        "Proporciona una descripció breu de 5 línies de l'objecte i després una llista d'etiquetes clau. "
+        "Format obligatori: DESCRIPCIÓ | etiqueta1, etiqueta2, etiqueta3"
+    )
+    
+    try:
+        # Reutilitzem OLLAMA_URL de settings perquè funcioni correctament tant en local amb SSH com en producció
+        client = ollama.Client(host=settings.OLLAMA_URL)
+        response = client.chat(
+             model='qwen3-vl:30b',
+             messages=[{
+                 'role': 'user',
+                 'content': prompt,
+                 'images': [image_data]
+             }]
+        )
+        
+        raw_text = response['message']['content'].strip()
+        descripcio = ""
+        etiquetes_raw = ""
+        
+        # Estratègia robusta de parsing
+        if "|" in raw_text:
+            parts = raw_text.split("|", 1)
+            descripcio = parts[0]
+            etiquetes_raw = parts[1]
+        else:
+            hash_idx = raw_text.find("#")
+            # Si trobem '#' a la meitat del text, considerem que és on comencen les etiquetes
+            if hash_idx > 5:
+                descripcio = raw_text[:hash_idx]
+                etiquetes_raw = raw_text[hash_idx:]
+            elif "\n" in raw_text:
+                lines = [l.strip() for l in raw_text.split("\n") if l.strip()]
+                if len(lines) > 1:
+                    descripcio = "\n".join(lines[:-1])
+                    etiquetes_raw = lines[-1]
+                else:
+                    descripcio = raw_text
+            else:
+                descripcio = raw_text
+
+        # 4.1 Netejar Descripció
+        descripcio = descripcio.strip()
+        if descripcio.startswith("#"):
+            descripcio = descripcio[1:].strip()
+        if descripcio.lower().startswith("descripció:"):
+            descripcio = descripcio[11:].strip()
+            
+        # El model qwen3 de vegades empra hashtags com separadors dins de la frase
+        descripcio = descripcio.replace("#", ", ")
+        
+        # Netejar espais repetits just davant de les comes
+        import re
+        descripcio = re.sub(r'\s+,', ',', descripcio)
+            
+        # 4.2 Netejar Etiquetes
+        etiquetes_raw = etiquetes_raw.strip()
+        if etiquetes_raw.lower().startswith("etiquetes:"):
+            etiquetes_raw = etiquetes_raw[10:].strip()
+            
+        etiquetes_raw = etiquetes_raw.replace("#", ",")
+        etiquetes = [t.strip() for t in etiquetes_raw.split(",") if t.strip()]
+        
+        if not etiquetes:
+            etiquetes = ["IA"]
+
+        return {
+            "descripcio": descripcio,
+            "etiquetes": etiquetes,
+            "intent_id": intent.id
+        }
+        
+    except Exception as e:
+        return {
+            "descripcio": f"Error de connexió amb marIA 2: {str(e)}",
+            "etiquetes": ["error"],
+            "intent_id": intent.id
+        }
