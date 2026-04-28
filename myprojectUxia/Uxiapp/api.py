@@ -85,12 +85,16 @@ class CreateItemSchema(Schema):
     descripcio: str
     expo_id: int
     etiquetes_ids: List[int] = []
+    imatge_destacada_idx: Optional[int] = 0
 
 
 class UpdateItemSchema(Schema):
     nom: str
     descripcio: str
     etiquetes_ids: List[int] = []
+    imatge_destacada_idx: Optional[int] = None
+    imatge_destacada_id: Optional[int] = None
+    imatges_conservadas_ids: List[int] = []
 
 
 class ExpoDetailSchema(ModelSchema):
@@ -228,13 +232,19 @@ def create_item(request, data: CreateItemSchema = Form(...), imatges: List[Uploa
         item.etiquetes.set(Etiqueta.objects.filter(id__in=data.etiquetes_ids))
 
     if imatges:
+        destacada_idx = data.imatge_destacada_idx if data.imatge_destacada_idx is not None else 0
+        
+        # Asegurar que el índice es válido
+        if destacada_idx >= len(imatges):
+            destacada_idx = 0
+            
         for idx, img_file in enumerate(imatges):
             Imatge.objects.create(
                 imatge=img_file,
                 item=item,
                 ordre=idx,
                 es_publica=True,
-                es_destacada=(idx == 0),
+                es_destacada=(idx == destacada_idx),
             )
         expo = item.expo
         if expo.estat != Expo.Estat.ACTUALITZABLE:
@@ -246,7 +256,7 @@ def create_item(request, data: CreateItemSchema = Form(...), imatges: List[Uploa
 
 @api.put("/items/{item_id}", response=ItemSchema, tags=["Ítems"])
 def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatges: List[UploadedFile] = File(None)):
-    """Actualitza un ítem. Si s'afegeixen imatges, l'expo passa a ACTUALITZABLE."""
+    """Actualitza un ítem. Si s'afegeixen o s'eliminen imatges, l'expo passa a ACTUALITZABLE."""
     item = Item.objects.get(pk=item_id)
     item.nom = data.nom
     item.descripcio = data.descripcio
@@ -254,16 +264,59 @@ def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatg
 
     item.etiquetes.set(Etiqueta.objects.filter(id__in=data.etiquetes_ids))
 
+    # Manejar eliminación de imágenes conservadas
+    if data.imatges_conservadas_ids:
+        imatges_a_eliminar = item.imatges.exclude(id__in=data.imatges_conservadas_ids)
+        if imatges_a_eliminar.exists():
+            imatges_a_eliminar.delete()
+            
+            # Si se eliminó la imagen destacada, marcar la primera como destacada
+            if not item.imatges.filter(es_destacada=True).exists():
+                primera_img = item.imatges.first()
+                if primera_img:
+                    primera_img.es_destacada = True
+                    primera_img.save()
+            
+            # Marcar expo como ACTUALITZABLE si se eliminaron imágenes
+            expo = item.expo
+            if expo.estat != Expo.Estat.ACTUALITZABLE:
+                expo.estat = Expo.Estat.ACTUALITZABLE
+                expo.save()
+
+    # Manejar cambio de imagen destacada (sin nuevas imágenes)
+    if data.imatge_destacada_id and not imatges:
+        # Desmarcar todas las imágenes destacadas de este item
+        item.imatges.update(es_destacada=False)
+        # Marcar la imagen especificada como destacada
+        try:
+            img = Imatge.objects.get(id=data.imatge_destacada_id, item=item)
+            img.es_destacada = True
+            img.save()
+        except Imatge.DoesNotExist:
+            pass
+
+    # Agregar nuevas imágenes
     if imatges:
         existing_count = item.imatges.count()
+        destacada_idx = data.imatge_destacada_idx if data.imatge_destacada_idx is not None else 0
+        
+        # Asegurar que el índice es válido
+        if destacada_idx >= len(imatges):
+            destacada_idx = 0
+        
+        # Si se van a agregar nuevas imágenes, desmarcar la actual destacada
+        if existing_count > 0:
+            item.imatges.update(es_destacada=False)
+        
         for idx, img_file in enumerate(imatges):
             Imatge.objects.create(
                 imatge=img_file,
                 item=item,
                 ordre=existing_count + idx,
                 es_publica=True,
-                es_destacada=(existing_count == 0 and idx == 0),
+                es_destacada=(idx == destacada_idx),
             )
+        
         expo = item.expo
         if expo.estat != Expo.Estat.ACTUALITZABLE:
             expo.estat = Expo.Estat.ACTUALITZABLE
@@ -289,6 +342,27 @@ def list_imatges(
     if es_destacada is not None:
         qs = qs.filter(es_destacada=es_destacada)
     return qs
+
+
+@api.put("/imatges/{imatge_id}/destacar", response=ImatgeSchema, tags=["Imatges"])
+def set_highlighted_image(request, imatge_id: int):
+    """Marca una imatge com a destacada per al seu item."""
+    imatge = Imatge.objects.get(pk=imatge_id)
+    
+    # Desmarcar la actual destacada per al mateix item
+    imatge.item.imatges.update(es_destacada=False)
+    
+    # Marcar la nova com a destacada
+    imatge.es_destacada = True
+    imatge.save()
+    
+    # Marcar la expo com a ACTUALITZABLE
+    expo = imatge.item.expo
+    if expo.estat != Expo.Estat.ACTUALITZABLE:
+        expo.estat = Expo.Estat.ACTUALITZABLE
+        expo.save()
+    
+    return imatge
 
 
 # ─── Endpoints: Etiquetes ─────────────────────────────────────────────────────

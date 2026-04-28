@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
  * Component base reutilitzable per a NouItemModal i EditItemModal.
  *   title       — títol del modal
  *   subtitle    — subtítol opcional (ex: "Expo: nom")
- *   initialValues — { nom, descripcio, etiquetesIds[] } per pre-emplenar en edició
- *   onSubmit    — async ({ nom, descripcio, etiquetesIds, imatges }) => void  (llença error si falla)
+ *   initialValues — { nom, descripcio, etiquetesIds[], imatges[], previews[], imatgeDestacada } per pre-emplenar en edició
+ *   onSubmit    — async ({ nom, descripcio, etiquetesIds, imatges, imatgeDestacada }) => void  (llença error si falla)
  *   onClose     — callback per tancar
  *   submitLabel — text del botó principal
  */
@@ -21,10 +21,15 @@ const ItemFormModal = ({
   const [descripcio, setDescripcio] = useState(initialValues.descripcio || "");
   const [etiquetes, setEtiquetes] = useState([]);
   const [selectedEtiquetes, setSelectedEtiquetes] = useState(
-    initialValues.etiquetesIds || []
+    initialValues.etiquetesIds || [],
   );
-  const [imatges, setImatges] = useState([]);
-  const [previews, setPreviews] = useState([]);
+  const [imatges, setImatges] = useState(initialValues.imatges || []);
+  const [previews, setPreviews] = useState(initialValues.previews || []);
+  const [destacada, setDestacada] = useState(
+    initialValues.imatgeDestacada !== undefined
+      ? initialValues.imatgeDestacada
+      : 0,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -37,14 +42,33 @@ const ItemFormModal = ({
 
   const toggleEtiqueta = (id) => {
     setSelectedEtiquetes((prev) =>
-      prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id],
     );
   };
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    setImatges(files);
-    setPreviews(files.map((f) => URL.createObjectURL(f)));
+    const newImatges = [...imatges, ...files];
+    const newPreviews = newImatges.map((f) => {
+      if (f.preview) return f.preview; // Imagen existente
+      return URL.createObjectURL(f); // Nueva imagen
+    });
+    setImatges(newImatges);
+    setPreviews(newPreviews);
+    // Si es la primera imagen, marcarla como destacada
+    if (imatges.length === 0 && newImatges.length > 0) {
+      setDestacada(0);
+    }
+  };
+
+  const removeImage = (idx) => {
+    setImatges(imatges.filter((_, i) => i !== idx));
+    setPreviews(previews.filter((_, i) => i !== idx));
+    if (destacada === idx) {
+      setDestacada(0);
+    } else if (destacada > idx) {
+      setDestacada(destacada - 1);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -52,7 +76,15 @@ const ItemFormModal = ({
     setLoading(true);
     setError(null);
     try {
-      await onSubmit({ nom, descripcio, etiquetesIds: selectedEtiquetes, imatges });
+      // Filtrar solo las nuevas imágenes (File objects)
+      const nuevasImatges = imatges.filter((img) => img instanceof File);
+      await onSubmit({
+        nom,
+        descripcio,
+        etiquetesIds: selectedEtiquetes,
+        imatges: nuevasImatges,
+        imatgeDestacada: destacada,
+      });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -165,7 +197,7 @@ const ItemFormModal = ({
               <span className="text-sm text-gray-500">
                 {imatges.length > 0
                   ? `${imatges.length} imatge(s) seleccionada(s)`
-                  : "Selecciona imatges"}
+                  : "Selecciona imatges (múltiple permès)"}
               </span>
               <input
                 type="file"
@@ -176,15 +208,53 @@ const ItemFormModal = ({
               />
             </label>
             {previews.length > 0 && (
-              <div className="flex gap-2 mt-2 flex-wrap">
-                {previews.map((src, i) => (
-                  <img
-                    key={i}
-                    src={src}
-                    alt={`preview ${i}`}
-                    className="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                  />
-                ))}
+              <div className="mt-3">
+                <p className="text-xs font-medium text-gray-600 mb-2">
+                  Gestiona les imatges: Clica per marcar com destacada
+                </p>
+                <div className="flex gap-3 flex-wrap">
+                  {previews.map((src, i) => (
+                    <div key={i} className="relative group">
+                      <img
+                        src={src}
+                        alt={`preview ${i}`}
+                        className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition ${
+                          destacada === i
+                            ? "border-yellow-500 ring-2 ring-yellow-300"
+                            : "border-gray-200 hover:border-gray-400"
+                        }`}
+                        onClick={() => setDestacada(i)}
+                      />
+                      {destacada === i && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
+                          <svg
+                            className="w-5 h-5 text-yellow-400"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        </div>
+                      )}
+                      {imatges[i] instanceof File && (
+                        <div className="absolute top-1 right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold opacity-0 group-hover:opacity-100 transition">
+                          +
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeImage(i)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition hover:bg-red-600"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-blue-600 mt-2">
+                  Clica sobre una imatge per marcar-la com a destacada. Clica la
+                  X per eliminar.
+                </p>
               </div>
             )}
           </div>

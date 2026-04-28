@@ -1,11 +1,18 @@
 import ItemFormModal from "./ItemFormModal";
 
 const NouItemModal = ({ expo, onClose, onSuccess }) => {
-  const handleSubmit = async ({ nom, descripcio, etiquetesIds, imatges }) => {
+  const handleSubmit = async ({
+    nom,
+    descripcio,
+    etiquetesIds,
+    imatges,
+    imatgeDestacada,
+  }) => {
     const formData = new FormData();
     formData.append("nom", nom);
     formData.append("descripcio", descripcio);
     formData.append("expo_id", expo.id);
+    formData.append("imatge_destacada_idx", imatgeDestacada || 0);
     etiquetesIds.forEach((id) => formData.append("etiquetes_ids", id));
     imatges.forEach((img) => formData.append("imatges", img));
 
