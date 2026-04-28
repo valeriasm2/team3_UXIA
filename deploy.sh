@@ -21,7 +21,6 @@ echo -e "${BLUE}>>> 3. Actualitzant dependències (Python)...${NC}"
 
 echo -e "${BLUE}>>> 4. Aplicant migracions de Base de Dades...${NC}"
 # Utilitzem el python de l'entorn virtual directament
-./uxia_virtual/bin/pip install -r requirements.txt
 ./uxia_virtual/bin/python3 myprojectUxia/manage.py migrate
 
 echo -e "${BLUE}>>> 4. Recarregant el servidor Apache...${NC}"

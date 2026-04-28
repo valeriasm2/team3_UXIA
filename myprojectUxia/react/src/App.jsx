@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from "react";
-import Landing from "./pages/Landing";
-import ExpoDetail from "./pages/ExpoDetail";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ItemDetailModal from "./components/ItemDetailModal";
-import BackgroundDecoration from "./components/BackgroundDecoration";
-import { getExpos, getItems, getItemImages } from "./api";
+import Landing from "./pages/Landing";
+import ExpoDetail from "./pages/ExpoDetail";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 
-const App = () => {
+// ProtectedRoute component para proteger las rutas de admin
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("adminToken");
+  return token ? children : <Navigate to="/admin" />;
+};
+
+const MainApp = () => {
   const [expos, setExpos] = useState([]);
   const [navigation, setNavigation] = useState({
     activeExpo: null,
@@ -97,6 +109,28 @@ const App = () => {
         />
       )}
     </div>
+  );
+};
+
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Main App Routes */}
+        <Route path="/" element={<MainApp />} />
+      </Routes>
+    </Router>
   );
 };
 
