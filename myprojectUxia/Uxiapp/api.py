@@ -2,6 +2,7 @@ from ninja import NinjaAPI, ModelSchema, Schema, File, Form
 from ninja.files import UploadedFile
 from ninja.errors import HttpError
 from typing import List, Optional
+import json
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
@@ -94,7 +95,7 @@ class UpdateItemSchema(Schema):
     etiquetes_ids: List[int] = []
     imatge_destacada_idx: Optional[int] = None
     imatge_destacada_id: Optional[int] = None
-    imatges_conservadas_ids: List[int] = []
+    imatges_conservadas_ids: Optional[str] = None
 
 
 class ExpoDetailSchema(ModelSchema):
@@ -219,7 +220,7 @@ def get_item(request, item_id: int):
     return Item.objects.prefetch_related('etiquetes', 'imatges', 'intents').get(pk=item_id)
 
 
-@api.post("/items", response=ItemSchema, tags=["Ítems"])
+@api.post("/items", response=ItemDetailSchema, tags=["Ítems"])
 def create_item(request, data: CreateItemSchema = Form(...), imatges: List[UploadedFile] = File(None)):
     """Crea un nou ítem. Si s'afegeixen imatges, l'expo passa a ACTUALITZABLE."""
     item = Item.objects.create(
@@ -254,7 +255,7 @@ def create_item(request, data: CreateItemSchema = Form(...), imatges: List[Uploa
     return item
 
 
-@api.put("/items/{item_id}", response=ItemSchema, tags=["Ítems"])
+@api.put("/items/{item_id}", response=ItemDetailSchema, tags=["Ítems"])
 def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatges: List[UploadedFile] = File(None)):
     """Actualitza un ítem. Si s'afegeixen o s'eliminen imatges, l'expo passa a ACTUALITZABLE."""
     item = Item.objects.get(pk=item_id)
@@ -266,22 +267,26 @@ def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatg
 
     # Manejar eliminación de imágenes conservadas
     if data.imatges_conservadas_ids:
-        imatges_a_eliminar = item.imatges.exclude(id__in=data.imatges_conservadas_ids)
-        if imatges_a_eliminar.exists():
-            imatges_a_eliminar.delete()
-            
-            # Si se eliminó la imagen destacada, marcar la primera como destacada
-            if not item.imatges.filter(es_destacada=True).exists():
-                primera_img = item.imatges.first()
-                if primera_img:
-                    primera_img.es_destacada = True
-                    primera_img.save()
-            
-            # Marcar expo como ACTUALITZABLE si se eliminaron imágenes
-            expo = item.expo
-            if expo.estat != Expo.Estat.ACTUALITZABLE:
-                expo.estat = Expo.Estat.ACTUALITZABLE
-                expo.save()
+        try:
+            ids_conservados = json.loads(data.imatges_conservadas_ids)
+            imatges_a_eliminar = item.imatges.exclude(id__in=ids_conservados)
+            if imatges_a_eliminar.exists():
+                imatges_a_eliminar.delete()
+                
+                # Si se eliminó la imagen destacada, marcar la primera como destacada
+                if not item.imatges.filter(es_destacada=True).exists():
+                    primera_img = item.imatges.first()
+                    if primera_img:
+                        primera_img.es_destacada = True
+                        primera_img.save()
+                
+                # Marcar expo como ACTUALITZABLE si se eliminaron imágenes
+                expo = item.expo
+                if expo.estat != Expo.Estat.ACTUALITZABLE:
+                    expo.estat = Expo.Estat.ACTUALITZABLE
+                    expo.save()
+        except (json.JSONDecodeError, TypeError):
+            pass
 
     # Manejar cambio de imagen destacada (sin nuevas imágenes)
     if data.imatge_destacada_id and not imatges:
@@ -292,6 +297,12 @@ def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatg
             img = Imatge.objects.get(id=data.imatge_destacada_id, item=item)
             img.es_destacada = True
             img.save()
+            
+            # Marcar expo como ACTUALITZABLE cuando cambia la destacada
+            expo = item.expo
+            if expo.estat != Expo.Estat.ACTUALITZABLE:
+                expo.estat = Expo.Estat.ACTUALITZABLE
+                expo.save()
         except Imatge.DoesNotExist:
             pass
 

@@ -17,23 +17,22 @@ const EditItemModal = ({ item, onClose, onSuccess }) => {
     const imatgesExistents = imatges.filter((img) => !(img instanceof File));
     const nuevasImatges = imatges.filter((img) => img instanceof File);
 
-    // Enviar IDs de imágenes existentes que se conservan (para eliminar las otras)
-    imatgesExistents.forEach((img) => {
-      if (img.id) {
-        formData.append("imatges_conservadas_ids", img.id);
-      }
-    });
+    // Enviar IDs de imágenes existentes que se conservan como JSON string
+    if (imatgesExistents.length > 0) {
+      const ids = imatgesExistents.map((img) => img.id).filter(Boolean);
+      formData.append("imatges_conservadas_ids", JSON.stringify(ids));
+    }
 
-    // Si se agregan nuevas imágenes, enviar el índice de la destacada entre las nuevas
+    // Determinar la imagen destacada
+    // Si hay nuevas imágenes, usar el índice entre las nuevas
     if (nuevasImatges.length > 0) {
       formData.append("imatge_destacada_idx", imatgeDestacada || 0);
       nuevasImatges.forEach((img) => formData.append("imatges", img));
-    } else if (imatgeDestacada !== undefined && imatges[imatgeDestacada]) {
-      // Si no hay nuevas imágenes pero cambió la destacada, enviar la ID de la imagen
-      if (imatges[imatgeDestacada].id) {
-        formData.append("imatge_destacada_id", imatges[imatgeDestacada].id);
-      } else {
-        formData.append("imatge_destacada_idx", imatgeDestacada || 0);
+    } else {
+      // Si no hay nuevas imágenes, usar el ID de la imagen existente
+      const imgDestacada = imatgesExistents[imatgeDestacada];
+      if (imgDestacada && imgDestacada.id) {
+        formData.append("imatge_destacada_id", imgDestacada.id);
       }
     }
 
@@ -49,6 +48,7 @@ const EditItemModal = ({ item, onClose, onSuccess }) => {
     }
     const updated = await res.json();
     onSuccess(updated, nuevasImatges.length > 0);
+    onClose(); // Cerrar modal después de guardar exitosamente
   };
 
   // Preparar valores iniciales con imágenes existentes
