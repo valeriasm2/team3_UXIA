@@ -7,6 +7,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
+<<<<<<< HEAD
   const handleSearch = async (value) => {
     setSearchTerm(value);
 
@@ -38,6 +39,25 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
       }
     }
   };
+=======
+  const normalize = (text) =>
+    text
+      ? text
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+      : "";
+
+  const filteredExpos =
+    searchTerm.length >= 3
+      ? expos.filter((expo) => {
+          const s = normalize(searchTerm);
+          return (
+            normalize(expo.nom).includes(s) || normalize(expo.lloc).includes(s)
+          );
+        })
+      : [];
+>>>>>>> spc18-editItm
 
   const showResults = searchTerm.length >= 3;
   const expoResults = searchResults.filter((r) => r.type === "expo");

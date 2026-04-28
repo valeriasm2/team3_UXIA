@@ -1,4 +1,4 @@
-from ninja import NinjaAPI, ModelSchema, Schema, File
+from ninja import NinjaAPI, ModelSchema, Schema, File, Form
 from ninja.files import UploadedFile
 from ninja.errors import HttpError
 from typing import List, Optional
@@ -10,6 +10,7 @@ from django.contrib.auth.models import User, Group
 from rest_framework.authtoken.models import Token
 from django.db import models
 from .models import Expo, Item, Imatge, Etiqueta, Intent
+from .ai_utils import process_intent
 
 api = NinjaAPI(title="UXIA API", version="2.0")
 
@@ -75,6 +76,27 @@ class ExpoSchema(ModelSchema):
         fields = '__all__'
 
 
+class UpdateExpoSchema(Schema):
+    nom: Optional[str] = None
+    lloc: Optional[str] = None
+    descripcio: Optional[str] = None
+    data_inici: Optional[str] = None
+    data_fi: Optional[str] = None
+
+
+class CreateItemSchema(Schema):
+    nom: str
+    descripcio: str
+    expo_id: int
+    etiquetes_ids: List[int] = []
+
+
+class UpdateItemSchema(Schema):
+    nom: str
+    descripcio: str
+    etiquetes_ids: List[int] = []
+
+
 class ExpoDetailSchema(ModelSchema):
     items: List[ItemSchema] = []
 
@@ -110,10 +132,12 @@ def test(request):
 
 
 @api.get("/expos", response=List[ExpoSchema], tags=["Exposicions"])
-def list_expos(request, estat: Optional[str] = None):
+def list_expos(request, estat: Optional[str] = None, propietari: Optional[str] = None):
     qs = Expo.objects.all()
     if estat:
         qs = qs.filter(estat=estat)
+    if propietari:
+        qs = qs.filter(propietari__username=propietari)
     return qs
 
 
@@ -165,6 +189,24 @@ def search_expos_and_items(request, q: str = ""):
         })
     
     return results
+@api.put("/expos/{expo_id}", response=ExpoSchema, tags=["Exposicions"])
+def update_expo(request, expo_id: int, data: UpdateExpoSchema = Form(...), imatge: UploadedFile = File(None)):
+    """
+    Actualitza els detalls d'una exposició.
+    """
+    expo = Expo.objects.get(pk=expo_id)
+    
+    # Actualitzar camps de text si s'han enviat
+    for attr, value in data.dict().items():
+        if value is not None:
+            setattr(expo, attr, value)
+    
+    # Actualitzar imatge si s'ha enviat
+    if imatge:
+        expo.imatge = imatge
+        
+    expo.save()
+    return expo
 
 
 # ─── Endpoints: Items ─────────────────────────────────────────────────────────
@@ -182,6 +224,116 @@ def list_items(request, expo_id: Optional[int] = None, etiqueta_id: Optional[int
 @api.get("/items/{item_id}", response=ItemDetailSchema, tags=["Ítems"])
 def get_item(request, item_id: int):
     return Item.objects.prefetch_related('etiquetes', 'imatges', 'intents').get(pk=item_id)
+
+
+@api.put("/items/{item_id}", response=ItemSchema, tags=["Ítems"])
+def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatges: List[UploadedFile] = File(None)):
+    """
+    Actualitza nom, descripció i etiquetes d'un ítem.
+    Si s'afegeixen imatges noves, l'estat de l'expo passa a ACTUALITZABLE.
+    """
+    item = Item.objects.get(pk=item_id)
+    item.nom = data.nom
+    item.descripcio = data.descripcio
+    item.save()
+
+    etiquetes = Etiqueta.objects.filter(id__in=data.etiquetes_ids)
+    item.etiquetes.set(etiquetes)
+
+    if imatges:
+        existing_count = item.imatges.count()
+        for idx, img_file in enumerate(imatges):
+            Imatge.objects.create(
+                imatge=img_file,
+                item=item,
+                ordre=existing_count + idx,
+                es_publica=True,
+                es_destacada=(existing_count == 0 and idx == 0),
+            )
+        expo = item.expo
+        if expo.estat != Expo.Estat.ACTUALITZABLE:
+            expo.estat = Expo.Estat.ACTUALITZABLE
+            expo.save()
+
+    return item
+
+
+@api.post("/items", response=ItemSchema, tags=["Ítems"])
+def create_item(request, data: CreateItemSchema = Form(...), imatges: List[UploadedFile] = File(None)):
+    """
+    Crea un nou ítem, li assigna etiquetes i, si n'hi ha, puja les seves imatges.
+    Si s'afegeixen imatges, l'estat de l'exposició passa a 'ACTUALITZABLE'.
+    """
+    # 1. Crear l'ítem
+    item = Item.objects.create(
+        nom=data.nom,
+        descripcio=data.descripcio,
+        expo_id=data.expo_id
+    )
+
+    # 2. Assignar etiquetes
+    if data.etiquetes_ids:
+        etiquetes = Etiqueta.objects.filter(id__in=data.etiquetes_ids)
+        item.etiquetes.set(etiquetes)
+
+    # 3. Gestionar imatges
+    if imatges:
+        for idx, img_file in enumerate(imatges):
+            Imatge.objects.create(
+                imatge=img_file,
+                item=item,
+                ordre=idx,
+                es_publica=True,
+                es_destacada=(idx == 0) # La primera imatge serà la destacada per defecte
+            )
+        
+        # 4. Actualitzar estat de l'expo si s'han afegit imatges
+        expo = item.expo
+        if expo.estat != Expo.Estat.ACTUALITZABLE:
+            expo.estat = Expo.Estat.ACTUALITZABLE
+            expo.save()
+
+    return item
+
+
+@api.put("/items/{item_id}", response=ItemSchema, tags=["Ítems"])
+def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatges: List[UploadedFile] = File(None)):
+    """
+    Actualitza els detalls d'un ítem existent.
+    """
+    item = Item.objects.get(pk=item_id)
+    
+    # 1. Actualitzar camps de text si s'han enviat
+    if data.nom is not None:
+        item.nom = data.nom
+    if data.descripcio is not None:
+        item.descripcio = data.descripcio
+        
+    # 2. Actualitzar etiquetes si s'ha enviat la llista
+    if data.etiquetes_ids is not None:
+        etiquetes = Etiqueta.objects.filter(id__in=data.etiquetes_ids)
+        item.etiquetes.set(etiquetes)
+        
+    item.save()
+
+    # 3. Gestionar noves imatges si n'hi ha
+    if imatges:
+        for idx, img_file in enumerate(imatges):
+            Imatge.objects.create(
+                imatge=img_file,
+                item=item,
+                ordre=item.imatges.count(),
+                es_publica=True,
+                es_destacada=False
+            )
+        
+        # 4. Actualitzar estat de l'expo
+        expo = item.expo
+        if expo.estat != Expo.Estat.ACTUALITZABLE:
+            expo.estat = Expo.Estat.ACTUALITZABLE
+            expo.save()
+
+    return item
 
 
 # ─── Endpoints: Imatges ───────────────────────────────────────────────────────
@@ -218,7 +370,6 @@ def list_intents(request, item_id: Optional[int] = None, encert: Optional[bool] 
     if encert is not None:
         qs = qs.filter(encert=encert)
     return qs
-from .ai_utils import process_intent
 
 # ─── Endpoints: IA (marIA 2) ──────────────────────────────────────────────────
 
