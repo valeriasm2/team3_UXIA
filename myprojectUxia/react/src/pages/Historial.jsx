@@ -14,7 +14,7 @@ const Historial = () => {
   const cargarIntents = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://127.0.0.1:8000/api/intents");
+      const response = await fetch("/api/intents");
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}`);
@@ -102,7 +102,7 @@ const Historial = () => {
                   <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                     {intent.imatge ? (
                       <img
-                        src={`http://127.0.0.1:8000${intent.imatge}`}
+                        src={intent.imatge}
                         alt="Intent"
                         className="w-full h-full object-cover"
                       />

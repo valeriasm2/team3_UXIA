@@ -7,7 +7,6 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-<<<<<<< HEAD
   const handleSearch = async (value) => {
     setSearchTerm(value);
 
@@ -18,13 +17,11 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `/api/search?q=${encodeURIComponent(value)}`,
-      );
+      const response = await fetch(`/api/search?q=${encodeURIComponent(value)}`);
       const results = await response.json();
       setSearchResults(results);
     } catch (error) {
-      console.error("Error en la búsqueda:", error);
+      console.error("Error en la cerca:", error);
       setSearchResults([]);
     } finally {
       setIsLoading(false);
@@ -32,32 +29,9 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
   };
 
   const handleSelectExpo = (result) => {
-    if (result.type === "expo") {
-      const expo = expos.find((e) => e.id === result.id);
-      if (expo) {
-        onSelectExpo(expo);
-      }
-    }
+    const expo = expos.find((e) => e.id === result.id);
+    if (expo) onSelectExpo(expo);
   };
-=======
-  const normalize = (text) =>
-    text
-      ? text
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .toLowerCase()
-      : "";
-
-  const filteredExpos =
-    searchTerm.length >= 3
-      ? expos.filter((expo) => {
-          const s = normalize(searchTerm);
-          return (
-            normalize(expo.nom).includes(s) || normalize(expo.lloc).includes(s)
-          );
-        })
-      : [];
->>>>>>> spc18-editItm
 
   const showResults = searchTerm.length >= 3;
   const expoResults = searchResults.filter((r) => r.type === "expo");
@@ -120,10 +94,10 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
           </div>
         </div>
 
-        {/* RESULTS SECTION - Only shown if searchTerm >= 3 */}
+        {/* RESULTS SECTION */}
         {showResults ? (
           <div className="space-y-12 animate-fade-in">
-            {/* EXPOS SECTION */}
+            {/* EXPOS */}
             {expoResults.length > 0 && (
               <div>
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
@@ -151,7 +125,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
               </div>
             )}
 
-            {/* ITEMS SECTION */}
+            {/* ITEMS */}
             {itemResults.length > 0 && (
               <div>
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
@@ -159,7 +133,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
                     <span className="inline-flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-700 rounded text-[10px] font-bold">
                       ITEM
                     </span>
-                    Cotxes ({itemResults.length})
+                    Ítems ({itemResults.length})
                   </h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -201,7 +175,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
               </div>
             )}
 
-            {/* CLEAR BUTTON */}
+            {/* CLEAR */}
             {searchTerm && (
               <div className="flex justify-center">
                 <button
@@ -217,7 +191,6 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
             )}
           </div>
         ) : (
-          /* INITIAL PLACEHOLDER */
           <div className="py-12 flex flex-col items-center opacity-20">
             <div className="w-px h-16 bg-accent rounded-full"></div>
             <p className="mt-4 text-[10px] font-bold uppercase tracking-widest">

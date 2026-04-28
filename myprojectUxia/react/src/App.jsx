@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -12,7 +12,6 @@ import AdminExpoDetail from "./pages/AdminExpoDetail";
 
 import { getExpos, getItems, getItemImages } from "./api";
 
-// ProtectedRoute component para proteger las rutas de admin
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("adminToken");
   return token ? children : <Navigate to="/admin" />;
@@ -20,90 +19,51 @@ const ProtectedRoute = ({ children }) => {
 
 const MainApp = () => {
   const [expos, setExpos] = useState([]);
-<<<<<<< HEAD
-  const [expoActual, setExpoActual] = useState(null);
-  const [items, setItems] = useState([]);
-  const [indexItem, setIndexItem] = useState(0);
-  const [itemSeleccionat, setItemSeleccionat] = useState(null);
-  const [imatgesItem, setImatgesItem] = useState([]);
-  const [selectedItemIdForCarousel, setSelectedItemIdForCarousel] =
-    useState(null);
-  const [itemIdToShowModal, setItemIdToShowModal] = useState(null);
-=======
   const [navigation, setNavigation] = useState({
     activeExpo: null,
     items: [],
     index: 0,
   });
-  const [detail, setDetail] = useState({
-    item: null,
-    images: [],
-  });
->>>>>>> spc18-editItm
+  const [detail, setDetail] = useState({ item: null, images: [] });
+  const [selectedItemId, setSelectedItemId] = useState(null);
+  const [itemIdToShowModal, setItemIdToShowModal] = useState(null);
 
-  // FETCH EXPOSICIONS AMB REFRESC AUTOMÀTIC (POLLING)
   useEffect(() => {
     const loadExpos = () => {
       getExpos()
         .then(setExpos)
         .catch((err) => console.error("Error expos:", err));
     };
-
-    loadExpos(); // Carrega inicial
-    const interval = setInterval(loadExpos, 5000); // Refresca cada 5 segons
-
+    loadExpos();
+    const interval = setInterval(loadExpos, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  // FETCH ITEMS QUAN CANVIA L'EXPO
   useEffect(() => {
     if (navigation.activeExpo) {
       getItems(navigation.activeExpo.id)
         .then((data) => {
-<<<<<<< HEAD
-          setItems(data);
-
-          // Si hay un item seleccionado para mostrar en el carrusel, encontrar su índice
-          if (selectedItemIdForCarousel) {
-            const itemIndex = data.findIndex(
-              (item) => item.id === selectedItemIdForCarousel,
-            );
-            setIndexItem(itemIndex >= 0 ? itemIndex : 0);
-            setSelectedItemIdForCarousel(null);
-          } else {
-            setIndexItem(0);
+          let index = 0;
+          if (selectedItemId) {
+            const idx = data.findIndex((item) => item.id === selectedItemId);
+            if (idx >= 0) index = idx;
+            setSelectedItemId(null);
           }
-        })
-        .catch((err) => console.error("Error items:", err));
-    }
-  }, [expoActual, selectedItemIdForCarousel]);
-
-  // Mostrar modal del item cuando esté disponible
-  useEffect(() => {
-    if (itemIdToShowModal && items.length > 0) {
-      const itemToShow = items.find((item) => item.id === itemIdToShowModal);
-      if (itemToShow) {
-        (async () => {
-          setItemSeleccionat(itemToShow);
-          try {
-            const res = await fetch(`/api/imatges?item_id=${itemToShow.id}`);
-            const data = await res.json();
-            setImatgesItem(data);
-          } catch (err) {
-            console.error("Error imatges:", err);
-          }
-        })();
-        setItemIdToShowModal(null);
-      }
-    }
-  }, [itemIdToShowModal, items]);
-=======
-          setNavigation((prev) => ({ ...prev, items: data, index: 0 }));
+          setNavigation((prev) => ({ ...prev, items: data, index }));
         })
         .catch((err) => console.error("Error items:", err));
     }
   }, [navigation.activeExpo]);
->>>>>>> spc18-editItm
+
+  useEffect(() => {
+    if (itemIdToShowModal && navigation.items.length > 0) {
+      const itemToShow = navigation.items.find((item) => item.id === itemIdToShowModal);
+      if (itemToShow) {
+        verDetalleItem(itemToShow);
+        setItemIdToShowModal(null);
+      }
+    }
+  }, [itemIdToShowModal, navigation.items]);
 
   const verDetalleItem = async (item) => {
     try {
@@ -116,15 +76,11 @@ const MainApp = () => {
   };
 
   const handleSelectItem = (itemId, expoId) => {
-    // Encontrar el expo por su ID
     const expoToSelect = expos.find((e) => e.id === expoId);
     if (expoToSelect) {
-      // Establecer el item que se debe mostrar primero en el carrusel
-      setSelectedItemIdForCarousel(itemId);
-      // Establecer el item para mostrar en el modal
+      setSelectedItemId(itemId);
       setItemIdToShowModal(itemId);
-      // Establecer el expo actual (esto desencadenará el useEffect para cargar los items)
-      setExpoActual(expoToSelect);
+      setNavigation({ activeExpo: expoToSelect, items: [], index: 0 });
     }
   };
 
@@ -155,14 +111,10 @@ const MainApp = () => {
           ) : (
             <Landing
               expos={expos}
-<<<<<<< HEAD
-              onSelectExpo={setExpoActual}
-              onSelectItem={handleSelectItem}
-=======
               onSelectExpo={(expo) =>
                 setNavigation({ activeExpo: expo, items: [], index: 0 })
               }
->>>>>>> spc18-editItm
+              onSelectItem={handleSelectItem}
             />
           )}
         </main>
@@ -170,7 +122,6 @@ const MainApp = () => {
         <Footer />
       </div>
 
-      {/* MODAL */}
       {detail.item && (
         <ItemDetailModal
           item={detail.item}
@@ -186,7 +137,6 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Admin Routes */}
         <Route path="/admin" element={<AdminLogin />} />
         <Route
           path="/admin/dashboard"
@@ -196,17 +146,16 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-        <Route path="/admin/exposicion/:id" element={
-          <ProtectedRoute>
-            <AdminExpoDetail />
-          </ProtectedRoute>
-        } />
-
-        {/* Main App Routes */}
+        <Route
+          path="/admin/exposicion/:id"
+          element={
+            <ProtectedRoute>
+              <AdminExpoDetail />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/" element={<MainApp />} />
         <Route path="/historial" element={<Historial />} />
-
-
       </Routes>
     </BrowserRouter>
   );

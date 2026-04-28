@@ -2,13 +2,9 @@ from ninja import NinjaAPI, ModelSchema, Schema, File, Form
 from ninja.files import UploadedFile
 from ninja.errors import HttpError
 from typing import List, Optional
-import base64
-import requests
-from django.conf import settings
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from django.db import models
 from .models import Expo, Item, Imatge, Etiqueta, Intent
 from .ai_utils import process_intent
 
@@ -36,13 +32,13 @@ class EtiquetaSchema(ModelSchema):
 class ImatgeSchema(ModelSchema):
     class Meta:
         model = Imatge
-        fields = ['id', 'imatge', 'es_publica', 'ordre', 'creat_el']
+        fields = ['id', 'imatge', 'es_publica', 'es_destacada', 'ordre', 'creat_el']
 
 
 class IntentSchema(ModelSchema):
     class Meta:
         model = Intent
-        fields = ['id', 'imatge', 'encert', 'confiança', 'creat_el']
+        fields = ['id', 'imatge', 'item', 'encert', 'confiança', 'descripcio_ia', 'etiquetes_ia', 'creat_el']
 
 
 class ItemSchema(ModelSchema):
@@ -112,16 +108,26 @@ class IdentifyResponseSchema(Schema):
 
 
 class SearchResultSchema(Schema):
-    """Schema polimórfic per a resultats de cerca (Expos o Items)"""
     id: int
     nom: str
     descripcio: str
-    type: str  # 'expo' o 'item'
-    lloc: Optional[str] = None  # Solo para expos
-    data_inici: Optional[str] = None  # Solo para expos
-    data_fi: Optional[str] = None  # Solo para expos
-    imatge: Optional[str] = None  # URL de la imatge
-    expo_id: Optional[int] = None  # Solo para items
+    type: str
+    lloc: Optional[str] = None
+    data_inici: Optional[str] = None
+    data_fi: Optional[str] = None
+    imatge: Optional[str] = None
+    expo_id: Optional[int] = None
+
+
+# ─── Endpoints: Auth ──────────────────────────────────────────────────────────
+
+@api.post("/auth/login", response=LoginResponseSchema, tags=["Auth"])
+def login(request, data: LoginSchema):
+    user = authenticate(username=data.username, password=data.password)
+    if not user:
+        raise HttpError(401, "Credencials incorrectes")
+    token, _ = Token.objects.get_or_create(user=user)
+    return {"token": token.key, "user": user.username}
 
 
 # ─── Endpoints: Expos ─────────────────────────────────────────────────────────
@@ -146,21 +152,27 @@ def get_expo(request, expo_id: int):
     return Expo.objects.prefetch_related('items').get(pk=expo_id)
 
 
+@api.put("/expos/{expo_id}", response=ExpoSchema, tags=["Exposicions"])
+def update_expo(request, expo_id: int, data: UpdateExpoSchema = Form(...), imatge: UploadedFile = File(None)):
+    expo = Expo.objects.get(pk=expo_id)
+    for attr, value in data.dict().items():
+        if value is not None:
+            setattr(expo, attr, value)
+    if imatge:
+        expo.imatge = imatge
+    expo.save()
+    return expo
+
+
 @api.get("/search", response=List[SearchResultSchema], tags=["Búsqueda"])
 def search_expos_and_items(request, q: str = ""):
-    """
-    Endpoint polimórfic de búsqueda que retorna Expos e Items ordenats.
-    Primero salen les expos, luego els items.
-    Busca solo por nombre (nom).
-    """
+    """Cerca polimòrfica: primer expos, després ítems."""
     results = []
-    
+
     if len(q) < 3:
         return results
-    
-    # Buscar Expos por nom
-    expos = Expo.objects.filter(nom__icontains=q)
-    for expo in expos:
+
+    for expo in Expo.objects.filter(nom__icontains=q):
         results.append({
             'id': expo.id,
             'nom': expo.nom,
@@ -171,49 +183,26 @@ def search_expos_and_items(request, q: str = ""):
             'data_fi': str(expo.data_fi),
             'imatge': expo.imatge.url if expo.imatge else None,
         })
-    
-    # Buscar Items por nom
-    items = Item.objects.filter(nom__icontains=q)
-    for item in items:
+
+    for item in Item.objects.filter(nom__icontains=q):
         first_img = item.imatges.filter(es_publica=True).first()
         results.append({
             'id': item.id,
             'nom': item.nom,
             'descripcio': item.descripcio,
             'type': 'item',
-            'lloc': None,
-            'data_inici': None,
-            'data_fi': None,
             'imatge': first_img.imatge.url if first_img else None,
             'expo_id': item.expo_id,
         })
-    
+
     return results
-@api.put("/expos/{expo_id}", response=ExpoSchema, tags=["Exposicions"])
-def update_expo(request, expo_id: int, data: UpdateExpoSchema = Form(...), imatge: UploadedFile = File(None)):
-    """
-    Actualitza els detalls d'una exposició.
-    """
-    expo = Expo.objects.get(pk=expo_id)
-    
-    # Actualitzar camps de text si s'han enviat
-    for attr, value in data.dict().items():
-        if value is not None:
-            setattr(expo, attr, value)
-    
-    # Actualitzar imatge si s'ha enviat
-    if imatge:
-        expo.imatge = imatge
-        
-    expo.save()
-    return expo
 
 
 # ─── Endpoints: Items ─────────────────────────────────────────────────────────
 
 @api.get("/items", response=List[ItemSchema], tags=["Ítems"])
 def list_items(request, expo_id: Optional[int] = None, etiqueta_id: Optional[int] = None):
-    qs = Item.objects.prefetch_related('etiquetes')
+    qs = Item.objects.prefetch_related('etiquetes', 'imatges')
     if expo_id:
         qs = qs.filter(expo_id=expo_id)
     if etiqueta_id:
@@ -226,19 +215,44 @@ def get_item(request, item_id: int):
     return Item.objects.prefetch_related('etiquetes', 'imatges', 'intents').get(pk=item_id)
 
 
+@api.post("/items", response=ItemSchema, tags=["Ítems"])
+def create_item(request, data: CreateItemSchema = Form(...), imatges: List[UploadedFile] = File(None)):
+    """Crea un nou ítem. Si s'afegeixen imatges, l'expo passa a ACTUALITZABLE."""
+    item = Item.objects.create(
+        nom=data.nom,
+        descripcio=data.descripcio,
+        expo_id=data.expo_id
+    )
+
+    if data.etiquetes_ids:
+        item.etiquetes.set(Etiqueta.objects.filter(id__in=data.etiquetes_ids))
+
+    if imatges:
+        for idx, img_file in enumerate(imatges):
+            Imatge.objects.create(
+                imatge=img_file,
+                item=item,
+                ordre=idx,
+                es_publica=True,
+                es_destacada=(idx == 0),
+            )
+        expo = item.expo
+        if expo.estat != Expo.Estat.ACTUALITZABLE:
+            expo.estat = Expo.Estat.ACTUALITZABLE
+            expo.save()
+
+    return item
+
+
 @api.put("/items/{item_id}", response=ItemSchema, tags=["Ítems"])
 def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatges: List[UploadedFile] = File(None)):
-    """
-    Actualitza nom, descripció i etiquetes d'un ítem.
-    Si s'afegeixen imatges noves, l'estat de l'expo passa a ACTUALITZABLE.
-    """
+    """Actualitza un ítem. Si s'afegeixen imatges, l'expo passa a ACTUALITZABLE."""
     item = Item.objects.get(pk=item_id)
     item.nom = data.nom
     item.descripcio = data.descripcio
     item.save()
 
-    etiquetes = Etiqueta.objects.filter(id__in=data.etiquetes_ids)
-    item.etiquetes.set(etiquetes)
+    item.etiquetes.set(Etiqueta.objects.filter(id__in=data.etiquetes_ids))
 
     if imatges:
         existing_count = item.imatges.count()
@@ -258,93 +272,22 @@ def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatg
     return item
 
 
-@api.post("/items", response=ItemSchema, tags=["Ítems"])
-def create_item(request, data: CreateItemSchema = Form(...), imatges: List[UploadedFile] = File(None)):
-    """
-    Crea un nou ítem, li assigna etiquetes i, si n'hi ha, puja les seves imatges.
-    Si s'afegeixen imatges, l'estat de l'exposició passa a 'ACTUALITZABLE'.
-    """
-    # 1. Crear l'ítem
-    item = Item.objects.create(
-        nom=data.nom,
-        descripcio=data.descripcio,
-        expo_id=data.expo_id
-    )
-
-    # 2. Assignar etiquetes
-    if data.etiquetes_ids:
-        etiquetes = Etiqueta.objects.filter(id__in=data.etiquetes_ids)
-        item.etiquetes.set(etiquetes)
-
-    # 3. Gestionar imatges
-    if imatges:
-        for idx, img_file in enumerate(imatges):
-            Imatge.objects.create(
-                imatge=img_file,
-                item=item,
-                ordre=idx,
-                es_publica=True,
-                es_destacada=(idx == 0) # La primera imatge serà la destacada per defecte
-            )
-        
-        # 4. Actualitzar estat de l'expo si s'han afegit imatges
-        expo = item.expo
-        if expo.estat != Expo.Estat.ACTUALITZABLE:
-            expo.estat = Expo.Estat.ACTUALITZABLE
-            expo.save()
-
-    return item
-
-
-@api.put("/items/{item_id}", response=ItemSchema, tags=["Ítems"])
-def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatges: List[UploadedFile] = File(None)):
-    """
-    Actualitza els detalls d'un ítem existent.
-    """
-    item = Item.objects.get(pk=item_id)
-    
-    # 1. Actualitzar camps de text si s'han enviat
-    if data.nom is not None:
-        item.nom = data.nom
-    if data.descripcio is not None:
-        item.descripcio = data.descripcio
-        
-    # 2. Actualitzar etiquetes si s'ha enviat la llista
-    if data.etiquetes_ids is not None:
-        etiquetes = Etiqueta.objects.filter(id__in=data.etiquetes_ids)
-        item.etiquetes.set(etiquetes)
-        
-    item.save()
-
-    # 3. Gestionar noves imatges si n'hi ha
-    if imatges:
-        for idx, img_file in enumerate(imatges):
-            Imatge.objects.create(
-                imatge=img_file,
-                item=item,
-                ordre=item.imatges.count(),
-                es_publica=True,
-                es_destacada=False
-            )
-        
-        # 4. Actualitzar estat de l'expo
-        expo = item.expo
-        if expo.estat != Expo.Estat.ACTUALITZABLE:
-            expo.estat = Expo.Estat.ACTUALITZABLE
-            expo.save()
-
-    return item
-
-
 # ─── Endpoints: Imatges ───────────────────────────────────────────────────────
 
 @api.get("/imatges", response=List[ImatgeSchema], tags=["Imatges"])
-def list_imatges(request, item_id: Optional[int] = None, nomes_publiques: bool = False):
+def list_imatges(
+    request,
+    item_id: Optional[int] = None,
+    nomes_publiques: bool = False,
+    es_destacada: Optional[bool] = None,
+):
     qs = Imatge.objects.all()
     if item_id:
         qs = qs.filter(item_id=item_id)
     if nomes_publiques:
         qs = qs.filter(es_publica=True)
+    if es_destacada is not None:
+        qs = qs.filter(es_destacada=es_destacada)
     return qs
 
 
@@ -356,7 +299,7 @@ def list_etiquetes(request, pare_id: Optional[int] = None):
     if pare_id:
         qs = qs.filter(pare_id=pare_id)
     elif pare_id == 0:
-        qs = qs.filter(pare__isnull=True)  # arrels
+        qs = qs.filter(pare__isnull=True)
     return qs
 
 
@@ -371,20 +314,15 @@ def list_intents(request, item_id: Optional[int] = None, encert: Optional[bool] 
         qs = qs.filter(encert=encert)
     return qs
 
+
 # ─── Endpoints: IA (marIA 2) ──────────────────────────────────────────────────
 
 @api.post("/identify", response=IdentifyResponseSchema, tags=["IA"])
 def identify_item(request, imatge: UploadedFile = File(...)):
-    """
-    Identifica un ítem a partir d'una foto mitjançant marIA 2 (Ollama).
-    Enregistra l'intent i retorna la descripció i etiquetes generades.
-    """
-    # 1. Enregistrar l'intent
+    """Identifica un ítem a partir d'una foto mitjançant marIA 2 (Ollama)."""
     intent = Intent.objects.create(imatge=imatge)
-    
-    # 2. Processar l'intent usant la utilitat comuna
     success = process_intent(intent)
-    
+
     if success:
         return {
             "descripcio": intent.descripcio_ia,

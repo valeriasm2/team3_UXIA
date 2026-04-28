@@ -20,31 +20,25 @@ const AdminExpoDetail = () => {
       setLoading(true);
       setError(null);
       
-      const expoResponse = await fetch(`http://127.0.0.1:8000/api/expos/${id}`, {
-        credentials: "include",
-      });
-      
+      const expoResponse = await fetch(`/api/expos/${id}`);
+
       if (!expoResponse.ok) {
         throw new Error("Error carregant l'exposició");
       }
-      
+
       const expoData = await expoResponse.json();
-      
-      const itemsResponse = await fetch(`http://127.0.0.1:8000/api/items?expo_id=${id}`, {
-        credentials: "include",
-      });
-      
+
+      const itemsResponse = await fetch(`/api/items?expo_id=${id}`);
+
       if (!itemsResponse.ok) {
         throw new Error("Error carregant els items");
       }
-      
+
       const itemsData = await itemsResponse.json();
-      
+
       const itemsConImagenes = await Promise.all(
         itemsData.map(async (item) => {
-          const imagenesResponse = await fetch(`http://127.0.0.1:8000/api/imatges?item_id=${item.id}`, {
-            credentials: "include",
-          });
+          const imagenesResponse = await fetch(`/api/imatges?item_id=${item.id}&nomes_publiques=true`);
           const imagenes = await imagenesResponse.json();
           
           const destacada = imagenes.find(img => img.es_destacada === true) || imagenes[0];
@@ -173,7 +167,7 @@ const AdminExpoDetail = () => {
                 <div className="relative h-48 overflow-hidden bg-gray-100">
                   {item.imagen_destacada_url ? (
                     <img
-                      src={`http://127.0.0.1:8000${item.imagen_destacada_url}`}
+                      src={item.imagen_destacada_url}
                       alt={item.nom}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -204,7 +198,7 @@ const AdminExpoDetail = () => {
                         {item.otras_imagenes.slice(0, 4).map((img) => (
                           <img
                             key={img.id}
-                            src={`http://127.0.0.1:8000${img.imatge}`}
+                            src={img.imatge}
                             alt="thumbnail"
                             className="w-12 h-12 object-cover rounded-lg border border-gray-200 hover:border-blue-500 transition cursor-pointer"
                           />
