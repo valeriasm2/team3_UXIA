@@ -38,21 +38,20 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
   const itemResults = searchResults.filter((r) => r.type === "item");
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12 animate-slide-up space-y-16">
+    <div className="max-w-7xl mx-auto px-6 py-12 space-y-16">
       {/* SEARCH SECTION */}
       <section className="space-y-12">
         <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <h2 className="text-4xl font-extrabold text-slate-900">
+          <h2 className="text-4xl font-extrabold text-slate-900 dark:text-white">
             Explora UXIA
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
-            Busca una ciutat, esdeveniment o cotxe per veure els continguts de
-            l'exposició.
+          <p className="text-slate-400 dark:text-slate-500 text-sm">
+            Busca una ciutat o esdeveniment per veure els cotxes de l'exposició.
           </p>
 
           {/* SEARCH BAR */}
           <div className="relative w-full mt-6">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5"
@@ -73,7 +72,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
               placeholder="Escriu almenys 3 lletres..."
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-lg py-3 pl-12 pr-4 text-slate-900 focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all shadow-sm"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-3 pl-12 pr-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all shadow-sm"
             />
 
             {searchTerm.length > 0 && searchTerm.length < 3 && (
@@ -201,9 +200,9 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
       </section>
 
       {/* IA SECTION */}
-      <section className="pt-16 border-t border-slate-100">
+      <section className="pt-16 border-t border-slate-100 dark:border-slate-700">
         <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
             No saps quin cotxe és?
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm">

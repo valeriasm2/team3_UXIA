@@ -21,7 +21,9 @@ const IdentificaItem = () => {
       if (videoRef.current) videoRef.current.srcObject = stream;
     } catch {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
         streamRef.current = stream;
         if (videoRef.current) videoRef.current.srcObject = stream;
       } catch (err) {
@@ -45,10 +47,14 @@ const IdentificaItem = () => {
     canvas.height = video.videoHeight;
     canvas.getContext("2d").drawImage(video, 0, 0);
     closeCamera();
-    canvas.toBlob((blob) => {
-      setPreview(URL.createObjectURL(blob));
-      identify(new File([blob], "foto.jpg", { type: "image/jpeg" }));
-    }, "image/jpeg", 0.92);
+    canvas.toBlob(
+      (blob) => {
+        setPreview(URL.createObjectURL(blob));
+        identify(new File([blob], "foto.jpg", { type: "image/jpeg" }));
+      },
+      "image/jpeg",
+      0.92,
+    );
   };
 
   const handleFile = (e) => {
@@ -82,8 +88,13 @@ const IdentificaItem = () => {
           <div className="w-full max-w-lg rounded-2xl overflow-hidden bg-black relative">
             {camError ? (
               <div className="p-8 text-center space-y-4">
-                <p className="text-red-400 text-sm">No s'ha pogut accedir a la càmera: {camError}</p>
-                <button onClick={closeCamera} className="px-4 py-2 bg-white text-black rounded-lg font-semibold">
+                <p className="text-red-400 text-sm">
+                  No s'ha pogut accedir a la càmera: {camError}
+                </p>
+                <button
+                  onClick={closeCamera}
+                  className="px-4 py-2 bg-white text-black rounded-lg font-semibold"
+                >
                   Tancar
                 </button>
               </div>
@@ -119,10 +130,16 @@ const IdentificaItem = () => {
       <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-8 max-w-2xl mx-auto shadow-sm animate-slide-up">
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center text-xl">🔍</div>
+            <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center text-xl">
+              🔍
+            </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white">Identifica amb marIA</h2>
-              <p className="text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px]">Ollama Vision</p>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-white">
+                Identifica amb marIA
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px]">
+                Ollama Vision
+              </p>
             </div>
           </div>
 
@@ -130,10 +147,16 @@ const IdentificaItem = () => {
             <div className="relative aspect-video bg-slate-200 dark:bg-slate-700 rounded-xl overflow-hidden border border-slate-300 dark:border-slate-600">
               {preview ? (
                 <>
-                  <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                  <img
+                    src={preview}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
                   {loading && (
                     <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center">
-                      <span className="text-accent font-bold text-xs uppercase tracking-widest animate-pulse">Analitzant...</span>
+                      <span className="text-accent font-bold text-xs uppercase tracking-widest animate-pulse">
+                        Analitzant...
+                      </span>
                     </div>
                   )}
                 </>
@@ -147,9 +170,12 @@ const IdentificaItem = () => {
 
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">Fes una foto</h3>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">
+                  Fes una foto
+                </h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
-                  Utilitza la càmera o puja una imatge per identificar qualsevol vehicle de l'exposició.
+                  Utilitza la càmera o puja una imatge per identificar qualsevol
+                  vehicle de l'exposició.
                 </p>
               </div>
 
@@ -170,7 +196,13 @@ const IdentificaItem = () => {
                   🖼️ PUJAR IMATGE
                 </button>
 
-                <input ref={galleryRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+                <input
+                  ref={galleryRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFile}
+                  className="hidden"
+                />
               </div>
             </div>
           </div>
@@ -178,13 +210,19 @@ const IdentificaItem = () => {
           {result && (
             <div className="bg-white dark:bg-slate-700/80 border border-slate-200 dark:border-slate-600 rounded-xl p-6 space-y-4 shadow-sm animate-fade-in">
               <div className="flex items-center gap-2 text-accent font-bold">
-                <span>✨</span><span>Identificació</span>
+                <span>✨</span>
+                <span>Identificació</span>
               </div>
-              <p className="text-slate-700 dark:text-slate-300 leading-relaxed italic">"{result.descripcio}"</p>
+              <p className="text-slate-700 dark:text-slate-300 leading-relaxed italic">
+                "{result.descripcio}"
+              </p>
               {result.etiquetes?.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {result.etiquetes.map((tag, i) => (
-                    <span key={i} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 text-[10px] font-bold uppercase rounded-md">
+                    <span
+                      key={i}
+                      className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 text-[10px] font-bold uppercase rounded-md"
+                    >
                       #{tag}
                     </span>
                   ))}

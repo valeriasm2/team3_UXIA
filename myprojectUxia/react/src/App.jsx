@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -11,6 +11,9 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminExpoDetail from "./pages/AdminExpoDetail";
 import { getExpos, getItems, getItemImages } from "./api";
+
+export const DarkContext = createContext({ isDark: false, toggle: () => {} });
+export const useDark = () => useContext(DarkContext);
 
 const Protected = ({ children }) =>
   localStorage.getItem("adminToken") ? children : <Navigate to="/admin" />;
@@ -95,16 +98,33 @@ const MainApp = () => {
   );
 };
 
-const App = () => (
-  <BrowserRouter>
-    <Routes>
-      <Route path="/admin" element={<AdminLogin />} />
-      <Route path="/admin/dashboard" element={<Protected><AdminDashboard /></Protected>} />
-      <Route path="/admin/exposicion/:id" element={<Protected><AdminExpoDetail /></Protected>} />
-      <Route path="/" element={<MainApp />} />
-      <Route path="/historial" element={<Historial />} />
-    </Routes>
-  </BrowserRouter>
-);
+const App = () => {
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved) return saved === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+  }, [isDark]);
+
+  const toggle = () => setIsDark((d) => !d);
+
+  return (
+    <DarkContext.Provider value={{ isDark, toggle }}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<Protected><AdminDashboard /></Protected>} />
+          <Route path="/admin/exposicion/:id" element={<Protected><AdminExpoDetail /></Protected>} />
+          <Route path="/" element={<MainApp />} />
+          <Route path="/historial" element={<Historial />} />
+        </Routes>
+      </BrowserRouter>
+    </DarkContext.Provider>
+  );
+};
 
 export default App;
