@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NouItemModal from "../components/NouItemModal";
+import EditExpoModal from "../components/EditExpoModal";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -8,6 +9,7 @@ const AdminDashboard = () => {
   const [myExpos, setMyExpos] = useState([]);
   const [showMyExpos, setShowMyExpos] = useState(false);
   const [nouItemExpo, setNouItemExpo] = useState(null);
+  const [editExpo, setEditExpo] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
   const fetchExpos = (adminUser) => {
@@ -34,6 +36,13 @@ const AdminDashboard = () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminUser");
     navigate("/admin");
+  };
+
+  const handleEditExpoSuccess = (updated) => {
+    setEditExpo(null);
+    setSuccessMsg(`Exposició "${updated.nom}" actualitzada correctament.`);
+    setTimeout(() => setSuccessMsg(null), 4000);
+    setMyExpos((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
   };
 
   const handleNouItemSuccess = (item, ambImatges) => {
@@ -119,13 +128,26 @@ const AdminDashboard = () => {
                       key={expo.id}
                       className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition flex flex-col"
                     >
-                      {expo.imatge && (
-                        <img
-                          src={expo.imatge}
-                          alt={expo.nom}
-                          className="w-full h-40 object-cover rounded-lg mb-4"
-                        />
-                      )}
+                      <div className="relative">
+                        {expo.imatge && (
+                          <img
+                            src={expo.imatge}
+                            alt={expo.nom}
+                            className="w-full h-40 object-cover rounded-lg mb-4"
+                          />
+                        )}
+                        {/* Botó editar (llapis) */}
+                        <button
+                          onClick={() => setEditExpo(expo)}
+                          title="Editar exposició"
+                          className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white rounded-lg shadow text-gray-600 hover:text-blue-600 transition"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                      </div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">
                         {expo.nom}
                       </h3>
@@ -186,6 +208,15 @@ const AdminDashboard = () => {
           expo={nouItemExpo}
           onClose={() => setNouItemExpo(null)}
           onSuccess={handleNouItemSuccess}
+        />
+      )}
+
+      {/* Modal Editar Expo */}
+      {editExpo && (
+        <EditExpoModal
+          expo={editExpo}
+          onClose={() => setEditExpo(null)}
+          onSuccess={handleEditExpoSuccess}
         />
       )}
     </div>
