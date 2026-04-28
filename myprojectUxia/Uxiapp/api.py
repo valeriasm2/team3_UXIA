@@ -4,6 +4,7 @@ from typing import List, Optional
 import base64
 import requests
 from django.conf import settings
+from django.db import models
 from .models import Expo, Item, Imatge, Etiqueta, Intent
 
 api = NinjaAPI(title="UXIA API", version="2.0")
@@ -74,6 +75,18 @@ class IdentifyResponseSchema(Schema):
     intent_id: int
 
 
+class SearchResultSchema(Schema):
+    """Schema polimórfic per a resultats de cerca (Expos o Items)"""
+    id: int
+    nom: str
+    descripcio: str
+    type: str  # 'expo' o 'item'
+    lloc: Optional[str] = None  # Solo para expos
+    data_inici: Optional[str] = None  # Solo para expos
+    data_fi: Optional[str] = None  # Solo para expos
+    imatge: Optional[str] = None  # URL de la imatge
+
+
 # ─── Endpoints: Expos ─────────────────────────────────────────────────────────
 
 @api.get("/test", tags=["Proves"])
@@ -92,6 +105,50 @@ def list_expos(request, estat: Optional[str] = None):
 @api.get("/expos/{expo_id}", response=ExpoDetailSchema, tags=["Exposicions"])
 def get_expo(request, expo_id: int):
     return Expo.objects.prefetch_related('items').get(pk=expo_id)
+
+
+@api.get("/search", response=List[SearchResultSchema], tags=["Búsqueda"])
+def search_expos_and_items(request, q: str = ""):
+    """
+    Endpoint polimórfic de búsqueda que retorna Expos e Items ordenats.
+    Primero salen les expos, luego els items.
+    Busca solo por nombre (nom).
+    """
+    results = []
+    
+    if len(q) < 3:
+        return results
+    
+    # Buscar Expos por nom
+    expos = Expo.objects.filter(nom__icontains=q)
+    for expo in expos:
+        results.append({
+            'id': expo.id,
+            'nom': expo.nom,
+            'descripcio': expo.descripcio,
+            'type': 'expo',
+            'lloc': expo.lloc,
+            'data_inici': str(expo.data_inici),
+            'data_fi': str(expo.data_fi),
+            'imatge': expo.imatge.url if expo.imatge else None,
+        })
+    
+    # Buscar Items por nom
+    items = Item.objects.filter(nom__icontains=q)
+    for item in items:
+        first_img = item.imatges.filter(es_publica=True).first()
+        results.append({
+            'id': item.id,
+            'nom': item.nom,
+            'descripcio': item.descripcio,
+            'type': 'item',
+            'lloc': None,
+            'data_inici': None,
+            'data_fi': None,
+            'imatge': first_img.imatge.url if first_img else None,
+        })
+    
+    return results
 
 
 # ─── Endpoints: Items ─────────────────────────────────────────────────────────
