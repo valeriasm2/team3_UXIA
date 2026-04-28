@@ -85,6 +85,7 @@ class SearchResultSchema(Schema):
     data_inici: Optional[str] = None  # Solo para expos
     data_fi: Optional[str] = None  # Solo para expos
     imatge: Optional[str] = None  # URL de la imatge
+    expo_id: Optional[int] = None  # Solo para items
 
 
 # ─── Endpoints: Expos ─────────────────────────────────────────────────────────
@@ -146,6 +147,7 @@ def search_expos_and_items(request, q: str = ""):
             'data_inici': None,
             'data_fi': None,
             'imatge': first_img.imatge.url if first_img else None,
+            'expo_id': item.expo_id,
         })
     
     return results

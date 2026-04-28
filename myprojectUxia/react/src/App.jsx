@@ -12,6 +12,8 @@ const App = () => {
   const [indexItem, setIndexItem] = useState(0);
   const [itemSeleccionat, setItemSeleccionat] = useState(null);
   const [imatgesItem, setImatgesItem] = useState([]);
+  const [selectedItemIdForCarousel, setSelectedItemIdForCarousel] =
+    useState(null);
 
   // FETCH EXPOSICIONS
   useEffect(() => {
@@ -28,11 +30,21 @@ const App = () => {
         .then((res) => res.json())
         .then((data) => {
           setItems(data);
-          setIndexItem(0);
+
+          // Si hay un item seleccionado para mostrar en el carrusel, encontrar su índice
+          if (selectedItemIdForCarousel) {
+            const itemIndex = data.findIndex(
+              (item) => item.id === selectedItemIdForCarousel,
+            );
+            setIndexItem(itemIndex >= 0 ? itemIndex : 0);
+            setSelectedItemIdForCarousel(null);
+          } else {
+            setIndexItem(0);
+          }
         })
         .catch((err) => console.error("Error items:", err));
     }
-  }, [expoActual]);
+  }, [expoActual, selectedItemIdForCarousel]);
 
   const verDetalleItem = async (item) => {
     setItemSeleccionat(item);
@@ -42,6 +54,17 @@ const App = () => {
       setImatgesItem(data);
     } catch (err) {
       console.error("Error imatges:", err);
+    }
+  };
+
+  const handleSelectItem = (itemId, expoId) => {
+    // Encontrar el expo por su ID
+    const expoToSelect = expos.find((e) => e.id === expoId);
+    if (expoToSelect) {
+      // Establecer el item que se debe mostrar primero
+      setSelectedItemIdForCarousel(itemId);
+      // Establecer el expo actual (esto desencadenará el useEffect para cargar los items)
+      setExpoActual(expoToSelect);
     }
   };
 
@@ -67,7 +90,11 @@ const App = () => {
               verDetalleItem={verDetalleItem}
             />
           ) : (
-            <Landing expos={expos} onSelectExpo={setExpoActual} />
+            <Landing
+              expos={expos}
+              onSelectExpo={setExpoActual}
+              onSelectItem={handleSelectItem}
+            />
           )}
         </main>
 

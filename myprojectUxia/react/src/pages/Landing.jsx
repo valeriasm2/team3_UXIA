@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import ExpoCard from "../components/ExpoCard";
 import IdentificaItem from "../IdentificaItem";
 
-const Landing = ({ expos, onSelectExpo }) => {
+const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -146,7 +146,8 @@ const Landing = ({ expos, onSelectExpo }) => {
                   {itemResults.map((result) => (
                     <div
                       key={`item-${result.id}`}
-                      className="bg-white border border-slate-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+                      onClick={() => onSelectItem(result.id, result.expo_id)}
+                      className="bg-white border border-slate-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
                     >
                       {result.imatge && (
                         <div className="aspect-video bg-slate-100 overflow-hidden">
