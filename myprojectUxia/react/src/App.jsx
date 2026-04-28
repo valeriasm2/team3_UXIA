@@ -8,6 +8,7 @@ import ExpoDetail from "./pages/ExpoDetail";
 import Historial from "./pages/Historial";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminExpoDetail from "./pages/AdminExpoDetail";
 
 // ProtectedRoute component para proteger las rutas de admin
 const ProtectedRoute = ({ children }) => {
@@ -110,10 +111,17 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="/admin/exposicion/:id" element={
+          <ProtectedRoute>
+            <AdminExpoDetail />
+          </ProtectedRoute>
+        } />
 
         {/* Main App Routes */}
         <Route path="/" element={<MainApp />} />
         <Route path="/historial" element={<Historial />} />
+
+
       </Routes>
     </BrowserRouter>
   );
