@@ -36,7 +36,10 @@ const MainApp = () => {
     if (!nav.activeExpo) return;
     getItems(nav.activeExpo.id).then((data) => {
       const index = selectedItemId
-        ? Math.max(0, data.findIndex((i) => i.id === selectedItemId))
+        ? Math.max(
+            0,
+            data.findIndex((i) => i.id === selectedItemId),
+          )
         : 0;
       setSelectedItemId(null);
       setNav((p) => ({ ...p, items: data, index }));
@@ -46,12 +49,18 @@ const MainApp = () => {
   useEffect(() => {
     if (!modalItemId || !nav.items.length) return;
     const item = nav.items.find((i) => i.id === modalItemId);
-    if (item) { showDetail(item); setModalItemId(null); }
+    if (item) {
+      showDetail(item);
+      setModalItemId(null);
+    }
   }, [modalItemId, nav.items]);
 
   const showDetail = async (item) => {
-    try { setDetail({ item, images: await getItemImages(item.id) }); }
-    catch { setDetail({ item, images: [] }); }
+    try {
+      setDetail({ item, images: await getItemImages(item.id) });
+    } catch {
+      setDetail({ item, images: [] });
+    }
   };
 
   const onSelectItem = (itemId, expoId) => {
@@ -73,14 +82,21 @@ const MainApp = () => {
               expo={nav.activeExpo}
               items={nav.items}
               indexItem={nav.index}
-              setIndexItem={(i) => setNav((p) => ({ ...p, index: i }))}
+              setIndexItem={(i) =>
+                setNav((p) => ({
+                  ...p,
+                  index: typeof i === "function" ? i(p.index) : i,
+                }))
+              }
               onBack={() => setNav({ activeExpo: null, items: [], index: 0 })}
               verDetalleItem={showDetail}
             />
           ) : (
             <Landing
               expos={expos}
-              onSelectExpo={(expo) => setNav({ activeExpo: expo, items: [], index: 0 })}
+              onSelectExpo={(expo) =>
+                setNav({ activeExpo: expo, items: [], index: 0 })
+              }
               onSelectItem={onSelectItem}
             />
           )}
@@ -100,15 +116,23 @@ const MainApp = () => {
 
 const App = () => {
   const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem("theme");
-    if (saved) return saved === "dark";
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    localStorage.removeItem("theme");
+    if (typeof window !== "undefined" && window.matchMedia) {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    return false;
   });
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
-    localStorage.setItem("theme", isDark ? "dark" : "light");
   }, [isDark]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (e) => setIsDark(e.matches);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
 
   const toggle = () => setIsDark((d) => !d);
 
@@ -117,8 +141,22 @@ const App = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/admin" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<Protected><AdminDashboard /></Protected>} />
-          <Route path="/admin/exposicion/:id" element={<Protected><AdminExpoDetail /></Protected>} />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <Protected>
+                <AdminDashboard />
+              </Protected>
+            }
+          />
+          <Route
+            path="/admin/exposicion/:id"
+            element={
+              <Protected>
+                <AdminExpoDetail />
+              </Protected>
+            }
+          />
           <Route path="/" element={<MainApp />} />
           <Route path="/historial" element={<Historial />} />
         </Routes>

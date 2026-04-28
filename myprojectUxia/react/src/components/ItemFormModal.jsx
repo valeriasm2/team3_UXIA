@@ -16,6 +16,7 @@ const ItemFormModal = ({
   onSubmit,
   onClose,
   submitLabel = "Confirmar",
+  onDelete,
 }) => {
   const [nom, setNom] = useState(initialValues.nom || "");
   const [descripcio, setDescripcio] = useState(initialValues.descripcio || "");
@@ -76,13 +77,11 @@ const ItemFormModal = ({
     setLoading(true);
     setError(null);
     try {
-      // Filtrar solo las nuevas imágenes (File objects)
-      const nuevasImatges = imatges.filter((img) => img instanceof File);
       await onSubmit({
         nom,
         descripcio,
         etiquetesIds: selectedEtiquetes,
-        imatges: nuevasImatges,
+        imatges, // Pass ALL imatges (File and Object) so parent can track deletions & featured
         imatgeDestacada: destacada,
       });
     } catch (err) {
@@ -268,6 +267,15 @@ const ItemFormModal = ({
 
           {/* Actions */}
           <div className="flex gap-3 pt-1">
+            {onDelete && (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="px-4 py-2 border border-red-300 text-red-600 rounded-lg font-medium text-sm hover:bg-red-50 transition"
+              >
+                Eliminar
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}

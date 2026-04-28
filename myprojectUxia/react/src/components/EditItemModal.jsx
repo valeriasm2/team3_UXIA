@@ -1,6 +1,8 @@
 import ItemFormModal from "./ItemFormModal";
 
 const EditItemModal = ({ item, onClose, onSuccess }) => {
+  const token = localStorage.getItem("adminToken");
+
   const handleSubmit = async ({
     nom,
     descripcio,
@@ -37,7 +39,6 @@ const EditItemModal = ({ item, onClose, onSuccess }) => {
       }
     }
 
-    const token = localStorage.getItem("adminToken");
     const res = await fetch(`/api/items/${item.id}`, {
       method: "PUT",
       headers: token ? { Authorization: `Token ${token}` } : {},
@@ -49,6 +50,25 @@ const EditItemModal = ({ item, onClose, onSuccess }) => {
     }
     const updated = await res.json();
     onSuccess(updated, nuevasImatges.length > 0);
+  };
+
+  const handleDelete = async () => {
+    if (
+      !window.confirm(
+        "N'estàs segur que vols eliminar aquest ítem completament?",
+      )
+    )
+      return;
+    try {
+      const res = await fetch(`/api/items/${item.id}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Token ${token}` } : {},
+      });
+      if (!res.ok) throw new Error("Error en eliminar");
+      onSuccess({ id: item.id, deleted: true }, false);
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   // Preparar valores iniciales con imágenes existentes
@@ -70,10 +90,11 @@ const EditItemModal = ({ item, onClose, onSuccess }) => {
         etiquetesIds: item.etiquetes?.map((e) => e.id) || [],
         imatges: existingImages,
         previews: existingImages.map((img) => img.preview),
-        imatgeDestacada: highlightedIdx,
+        imatgeDestacada: highlightedIdx > -1 ? highlightedIdx : 0,
       }}
       onSubmit={handleSubmit}
       onClose={onClose}
+      onDelete={handleDelete}
       submitLabel="Guardar canvis"
     />
   );

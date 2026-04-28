@@ -324,6 +324,20 @@ def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatg
 
     return item
 
+@api.delete("/items/{item_id}", tags=["Ítems"])
+def delete_item(request, item_id: int):
+    """Elimina un ítem sencer. L'expo associada passa a l'estat ACTUALITZABLE per recalcular si hi falten imatges... encara que es pot treure això."""
+    try:
+        item = Item.objects.get(pk=item_id)
+        expo = item.expo
+        item.delete()
+        if expo.estat != Expo.Estat.ACTUALITZABLE:
+            expo.estat = Expo.Estat.ACTUALITZABLE
+            expo.save()
+        return {"success": True}
+    except Item.DoesNotExist:
+        raise HttpError(404, "Ítem no trobat")
+
 
 # ─── Endpoints: Imatges ───────────────────────────────────────────────────────
 
