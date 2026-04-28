@@ -1,15 +1,30 @@
 from ninja import NinjaAPI, ModelSchema, Schema, File, Form
 from ninja.files import UploadedFile
+from ninja.errors import HttpError
 from typing import List, Optional
 import base64
 import requests
 from django.conf import settings
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
 from .models import Expo, Item, Imatge, Etiqueta, Intent
+from .ai_utils import process_intent
 
 api = NinjaAPI(title="UXIA API", version="2.0")
 
 
 # ─── Schemas ──────────────────────────────────────────────────────────────────
+
+class LoginSchema(Schema):
+    username: str
+    password: str
+
+
+class LoginResponseSchema(Schema):
+    token: str
+    user: str
+
 
 class EtiquetaSchema(ModelSchema):
     class Meta:
@@ -89,7 +104,34 @@ class IdentifyResponseSchema(Schema):
     intent_id: int
 
 
-# ─── Endpoints: Expos ─────────────────────────────────────────────────────────
+# ─── Endpoints: Auth ──────────────────────────────────────────────────────────
+
+@api.post("/auth/login", response=LoginResponseSchema, tags=["Auth"])
+def login(request, payload: LoginSchema):
+    """
+    Endpoint de login para el panel de administración.
+    Requiere nombre de usuario y contraseña.
+    Retorna un token de autenticación.
+    """
+    user = authenticate(username=payload.username, password=payload.password)
+    
+    if user is None:
+        raise HttpError(401, "Credenciales inválidas")
+    
+    # Solo permitir login si el usuario es staff (administrador)
+    if not user.is_staff:
+        raise HttpError(403, "No tienes permisos para acceder al panel de administración")
+    
+    # Obtener o crear el token
+    token, created = Token.objects.get_or_create(user=user)
+    
+    return {
+        "token": token.key,
+        "user": user.username
+    }
+
+
+# ─── Endpoints: Proves ────────────────────────────────────────────────────────
 
 @api.get("/test", tags=["Proves"])
 def test(request):
@@ -97,10 +139,12 @@ def test(request):
 
 
 @api.get("/expos", response=List[ExpoSchema], tags=["Exposicions"])
-def list_expos(request, estat: Optional[str] = None):
+def list_expos(request, estat: Optional[str] = None, propietari: Optional[str] = None):
     qs = Expo.objects.all()
     if estat:
         qs = qs.filter(estat=estat)
+    if propietari:
+        qs = qs.filter(propietari__username=propietari)
     return qs
 
 
@@ -218,6 +262,7 @@ def list_intents(request, item_id: Optional[int] = None, encert: Optional[bool] 
     if encert is not None:
         qs = qs.filter(encert=encert)
     return qs
+
 # ─── Endpoints: IA (marIA 2) ──────────────────────────────────────────────────
 
 @api.post("/identify", response=IdentifyResponseSchema, tags=["IA"])
@@ -226,93 +271,21 @@ def identify_item(request, imatge: UploadedFile = File(...)):
     Identifica un ítem a partir d'una foto mitjançant marIA 2 (Ollama).
     Enregistra l'intent i retorna la descripció i etiquetes generades.
     """
-    # 1. Enregistrar l'intent al servidor
+    # 1. Enregistrar l'intent
     intent = Intent.objects.create(imatge=imatge)
     
-    # 2. Preparar imatge per a Ollama (Base64)
-    imatge.seek(0)
-    image_data = base64.b64encode(imatge.read()).decode('utf-8')
+    # 2. Processar l'intent usant la utilitat comuna
+    success = process_intent(intent)
     
-    import ollama
-    
-    # 3. Cridar al servei marIA 2
-    prompt = (
-        "Identifica aquest objecte de l'exposició. Respon en català. "
-        "Proporciona una descripció breu de 5 línies de l'objecte i després una llista d'etiquetes clau. "
-        "Format obligatori: DESCRIPCIÓ | etiqueta1, etiqueta2, etiqueta3"
-    )
-    
-    try:
-        # Reutilitzem OLLAMA_URL de settings perquè funcioni correctament tant en local amb SSH com en producció
-        client = ollama.Client(host=settings.OLLAMA_URL)
-        response = client.chat(
-             model='qwen3-vl:30b',
-             messages=[{
-                 'role': 'user',
-                 'content': prompt,
-                 'images': [image_data]
-             }]
-        )
-        
-        raw_text = response['message']['content'].strip()
-        descripcio = ""
-        etiquetes_raw = ""
-        
-        # Estratègia robusta de parsing
-        if "|" in raw_text:
-            parts = raw_text.split("|", 1)
-            descripcio = parts[0]
-            etiquetes_raw = parts[1]
-        else:
-            hash_idx = raw_text.find("#")
-            # Si trobem '#' a la meitat del text, considerem que és on comencen les etiquetes
-            if hash_idx > 5:
-                descripcio = raw_text[:hash_idx]
-                etiquetes_raw = raw_text[hash_idx:]
-            elif "\n" in raw_text:
-                lines = [l.strip() for l in raw_text.split("\n") if l.strip()]
-                if len(lines) > 1:
-                    descripcio = "\n".join(lines[:-1])
-                    etiquetes_raw = lines[-1]
-                else:
-                    descripcio = raw_text
-            else:
-                descripcio = raw_text
-
-        # 4.1 Netejar Descripció
-        descripcio = descripcio.strip()
-        if descripcio.startswith("#"):
-            descripcio = descripcio[1:].strip()
-        if descripcio.lower().startswith("descripció:"):
-            descripcio = descripcio[11:].strip()
-            
-        # El model qwen3 de vegades empra hashtags com separadors dins de la frase
-        descripcio = descripcio.replace("#", ", ")
-        
-        # Netejar espais repetits just davant de les comes
-        import re
-        descripcio = re.sub(r'\s+,', ',', descripcio)
-            
-        # 4.2 Netejar Etiquetes
-        etiquetes_raw = etiquetes_raw.strip()
-        if etiquetes_raw.lower().startswith("etiquetes:"):
-            etiquetes_raw = etiquetes_raw[10:].strip()
-            
-        etiquetes_raw = etiquetes_raw.replace("#", ",")
-        etiquetes = [t.strip() for t in etiquetes_raw.split(",") if t.strip()]
-        
-        if not etiquetes:
-            etiquetes = ["IA"]
-
+    if success:
         return {
-            "descripcio": descripcio,
-            "etiquetes": etiquetes,
+            "descripcio": intent.descripcio_ia,
+            "etiquetes": intent.etiquetes_ia,
             "intent_id": intent.id
         }
-        
-    except Exception as e:
+    else:
         return {
-            "descripcio": f"Error de connexió amb marIA 2: {str(e)}",
+            "descripcio": intent.descripcio_ia or "Error desconegut en la identificació.",
             "etiquetes": ["error"],
             "intent_id": intent.id
         }

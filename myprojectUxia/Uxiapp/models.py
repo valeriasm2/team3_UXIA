@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 # ─── Utilitats d'upload ────────────────────────────────────────────────────────
@@ -74,6 +75,14 @@ class Expo(models.Model):
     lloc = models.CharField(max_length=100, verbose_name="Lloc")
     descripcio = models.TextField(verbose_name="Descripció")
     imatge = models.ImageField(upload_to=expo_upload, verbose_name="Imatge")
+    propietari = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='expos',
+        verbose_name="Propietari",
+        null=True,
+        blank=True
+    )
 
     estat = models.CharField(
         max_length=20,
@@ -179,6 +188,16 @@ class Intent(models.Model):
         verbose_name="Confiança IA",
         help_text="Percentatge de confiança retornat pel model (0.0 – 1.0)"
     )
+    descripcio_ia = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Descripció IA"
+    )
+    etiquetes_ia = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name="Etiquetes IA"
+    )
     creat_el = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -187,4 +206,8 @@ class Intent(models.Model):
         ordering = ['-creat_el']
 
     def __str__(self):
-        return f"Intent per a {self.item.nom}"
+        if self.item:
+            return f"Intent per a {self.item.nom}"
+        if self.etiquetes_ia:
+            return f"Intent IA: {', '.join(self.etiquetes_ia[:3])}"
+        return "Intent (desconegut)"
