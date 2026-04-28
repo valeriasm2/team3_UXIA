@@ -12,43 +12,28 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-import environ
- 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env = environ.Env(
-    DEBUG=(bool, False)
-)
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'django-insecure-y3)mn^hlu@a-^nklw_i2wb%=vlmsjet%r8fgqjhfra()wh=5*e'
 
-# Podeu deixar les instruccions que hi hagi de l'esquelet de Django
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
- 
-# variables a llegir de .env
-DEBUG = env('DEBUG')
-SECRET_KEY = env('SECRET_KEY')
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*",])
-DATABASES = {
-    # configura a travÃ©s de la variable DATABASE_URL
-    'default': env.db(),
-}
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS",default=[
-    "http://localhost:5173",    # Exemple: React en desenvolupament amb Vite o CRA
-    "http://127.0.0.1:5173",
-])
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
 
-OLLAMA_URL = env("OLLAMA_URL", default="http://localhost:11434")
+ALLOWED_HOSTS = ['*']
+
 # Application definition
-
 INSTALLED_APPS = [
-    'corsheaders',
-    'Uxiapp.apps.UxiappConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
+    'Uxiapp',
 ]
 
 MIDDLEWARE = [
@@ -81,23 +66,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'myprojectUxia.wsgi.application'
 
-
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-# Base de dades configurada via DATABASE_URL en .env (o per defecte si no es defineix)
-# Si es descuenta la part de sota, s'usarà SQLite explicitament.
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -113,28 +90,34 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Media files (para imágenes)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(",")
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo
+CORS_ALLOW_CREDENTIALS = True
+
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+]
+
+# Ollama URL (si lo usas)
+OLLAMA_URL = 'http://localhost:11434'

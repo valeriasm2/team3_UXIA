@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ItemDetailModal from "./components/ItemDetailModal";
 import Landing from "./pages/Landing";
 import ExpoDetail from "./pages/ExpoDetail";
+import Historial from "./pages/Historial";
 
-const App = () => {
+const AppContent = () => {
   const [expos, setExpos] = useState([]);
   const [expoActual, setExpoActual] = useState(null);
   const [items, setItems] = useState([]);
@@ -83,6 +85,17 @@ const App = () => {
         />
       )}
     </div>
+  );
+};
+
+const App = () => {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<AppContent />} />
+        <Route path="/historial" element={<Historial />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 
