@@ -6,7 +6,7 @@ import base64
 import requests
 from django.conf import settings
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from rest_framework.authtoken.models import Token
 from .models import Expo, Item, Imatge, Etiqueta, Intent
 
@@ -96,6 +96,7 @@ def login(request, payload: LoginSchema):
     Endpoint de login para el panel de administración.
     Requiere nombre de usuario y contraseña.
     Retorna un token de autenticación.
+    El usuario debe pertenecer al grupo 'Admins'.
     """
     user = authenticate(username=payload.username, password=payload.password)
     
@@ -105,6 +106,10 @@ def login(request, payload: LoginSchema):
     # Solo permitir login si el usuario es staff (administrador)
     if not user.is_staff:
         raise HttpError(403, "No tienes permisos para acceder al panel de administración")
+    
+    # Verificar que el usuario pertenece al grupo 'Admins'
+    if not user.groups.filter(name="Admins").exists():
+        raise HttpError(403, "El usuario debe pertenecer al grupo 'Admins'")
     
     # Obtener o crear el token
     token, created = Token.objects.get_or_create(user=user)
