@@ -1,6 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
+  const navigate = useNavigate();
+
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
       <nav className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -17,6 +20,13 @@ const Header = () => {
             </span>
           </div>
         </div>
+        
+        <button
+          onClick={() => navigate("/admin")}
+          className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 rounded-lg hover:bg-slate-50 transition-all"
+        >
+          Admin Login
+        </button>
       </nav>
     </header>
   );

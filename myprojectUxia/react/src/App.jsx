@@ -1,13 +1,27 @@
 import React, { useState, useEffect } from "react";
-import Landing from "./pages/Landing";
-import ExpoDetail from "./pages/ExpoDetail";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ItemDetailModal from "./components/ItemDetailModal";
-import BackgroundDecoration from "./components/BackgroundDecoration";
+import Landing from "./pages/Landing";
+import ExpoDetail from "./pages/ExpoDetail";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
+
 import { getExpos, getItems, getItemImages } from "./api";
 
-const App = () => {
+// ProtectedRoute component para proteger las rutas de admin
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("adminToken");
+  return token ? children : <Navigate to="/admin" />;
+};
+
+const MainApp = () => {
   const [expos, setExpos] = useState([]);
   const [navigation, setNavigation] = useState({
     activeExpo: null,
@@ -55,8 +69,11 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-slate-800 selection:bg-accent selection:text-white">
-      <BackgroundDecoration />
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 selection:bg-accent selection:text-white transition-colors">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-20 z-0">
+        <div className="absolute top-0 -left-1/4 w-1/2 h-full bg-accent/10 blur-[120px] rounded-full transform -rotate-12"></div>
+        <div className="absolute bottom-0 -right-1/4 w-1/2 h-full bg-accent/10 blur-[120px] rounded-full transform rotate-12"></div>
+      </div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header />
@@ -97,6 +114,28 @@ const App = () => {
         />
       )}
     </div>
+  );
+};
+
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Main App Routes */}
+        <Route path="/" element={<MainApp />} />
+      </Routes>
+    </Router>
   );
 };
 
