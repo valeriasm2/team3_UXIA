@@ -1,52 +1,15 @@
 import { useState, useRef } from "react";
-import { identifyItem } from "./api";
 
 const IdentificaItem = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [isCamera, setIsCamera] = useState(false);
   const fileInputRef = useRef(null);
-  const videoRef = useRef(null);
 
-  const startCamera = async () => {
-    setIsCamera(true);
-    setPreview(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) videoRef.current.srcObject = stream;
-    } catch (err) {
-      console.error(err);
-      setIsCamera(false);
-    }
-  };
-
-  const capturePhoto = () => {
-    const video = videoRef.current;
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext("2d").drawImage(video, 0, 0);
-
-    const dataUrl = canvas.toDataURL("image/jpeg");
-    setPreview(dataUrl);
-
-    // Convert to file and send
-    canvas.toBlob((blob) => {
-      const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-      identifyImage(file);
-    }, "image/jpeg");
-
-    // Stop camera
-    video.srcObject.getTracks().forEach((t) => t.stop());
-    setIsCamera(false);
-  };
-
-  const handleFile = (e) => {
+  const handleCapture = (e) => {
     const file = e.target.files[0];
     if (file) {
       setPreview(URL.createObjectURL(file));
-      setIsCamera(false);
       identifyImage(file);
     }
   };
@@ -54,8 +17,23 @@ const IdentificaItem = () => {
   const identifyImage = async (file) => {
     setLoading(true);
     setResult(null);
+    const formData = new FormData();
+    formData.append("imatge", file);
+
     try {
-      const data = await identifyItem(file);
+      const response = await fetch("/api/identify", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Error del servidor (${response.status}): ${errorText.substring(0, 50)}`,
+        );
+      }
+
+      const data = await response.json();
       setResult(data);
     } catch (error) {
       console.error("Error identificant ítem:", error);
@@ -69,58 +47,41 @@ const IdentificaItem = () => {
   };
 
   return (
-    <div className="card-estilo bg-slate-50 border-slate-200 animate-slide-up">
+    <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-8 max-w-2xl mx-auto shadow-sm transition-all animate-[slideUp_0.4s_ease-out]">
       <div className="relative z-10 space-y-6">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center text-xl">
             🔍
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-800">
-              Escàner de Vehicles
+            <h2 className="text-xl font-bold text-slate-800 dark:text-white">
+              Identifica amb marIA
             </h2>
-            <p className="texto-suave uppercase tracking-widest text-[10px]">
-              Reconeixement Visual
+            <p className="text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px]">
+              Ollama Vision
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-          <div className="relative aspect-video bg-slate-200 rounded-xl overflow-hidden border border-slate-300">
-            {isCamera ? (
-              <div className="relative h-full w-full bg-black">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  onClick={capturePhoto}
-                  className="absolute bottom-4 left-1/2 -translate-x-1/2 w-12 h-12 bg-white rounded-full border-4 border-accent shadow-lg"
-                />
-              </div>
-            ) : preview ? (
+          <div className="relative aspect-video bg-slate-200 dark:bg-slate-700 rounded-xl overflow-hidden border border-slate-300 dark:border-slate-600">
+            {preview ? (
               <div className="relative h-full w-full">
                 <img
                   src={preview}
                   alt="Preview"
                   className="w-full h-full object-cover"
                 />
-                <button
-                  onClick={() => setPreview(null)}
-                  className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full"
-                >
-                  ✕
-                </button>
                 {loading && (
-                  <div className="absolute inset-0 bg-white/40 flex items-center justify-center font-bold text-accent">
-                    Analitzant...
+                  <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center">
+                    <div className="text-accent font-bold text-xs uppercase tracking-widest animate-pulse">
+                      Analitzant...
+                    </div>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-slate-400">
+              <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-slate-600">
                 <div className="text-4xl">📸</div>
                 <p className="text-xs font-bold uppercase">Sense imatge</p>
               </div>
@@ -129,8 +90,10 @@ const IdentificaItem = () => {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <h3 className="text-lg font-bold text-slate-800">Fes una foto</h3>
-              <p className="texto-suave leading-relaxed">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                Fes una foto
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
                 Utilitza la càmera per identificar qualsevol vehicle de
                 l'exposició al moment.
               </p>
@@ -138,39 +101,37 @@ const IdentificaItem = () => {
 
             <div className="flex flex-col gap-3">
               <button
-                className="boton-principal w-full flex items-center justify-center gap-3 py-3"
-                onClick={startCamera}
+                className="w-full flex items-center justify-center gap-3 py-3 px-6 bg-accent hover:bg-accent-dark text-white rounded-xl font-bold text-sm tracking-widest uppercase shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => fileInputRef.current.click()}
                 disabled={loading}
               >
-                {loading ? "ANALITZANT..." : "ESCANEJAR VEHICLE"}
-              </button>
-
-              <button
-                className="bg-white border border-slate-200 text-slate-700 w-full flex items-center justify-center gap-3 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
-                onClick={() => fileInputRef.current.click()}
-              >
-                {loading ? "ANALITZANT..." : "PUJAR FOTO"}
+                {loading ? "PROCESSANT..." : "IDENTIFICAR COTXE"}
               </button>
 
               <input
                 type="file"
                 accept="image/*"
+                capture="environment"
                 ref={fileInputRef}
-                onChange={handleFile}
+                onChange={handleCapture}
                 className="hidden"
               />
+
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center uppercase tracking-widest italic">
+                Optimitzat per a dispositius mòbils amb càmera HD
+              </p>
             </div>
           </div>
         </div>
 
         {result && (
-          <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 animate-fade-in shadow-sm">
+          <div className="bg-white dark:bg-slate-700/80 border border-slate-200 dark:border-slate-600 rounded-xl p-6 space-y-4 shadow-sm transition-colors animate-[fadeIn_0.3s_ease-out]">
             <div className="flex items-center gap-2 text-accent font-bold">
               <span>✨</span>
-              <span>Identificació del Vehicle</span>
+              <span>Identificació</span>
             </div>
 
-            <p className="text-slate-700 leading-relaxed italic">
+            <p className="text-slate-700 dark:text-slate-300 leading-relaxed italic">
               "{result.descripcio}"
             </p>
 
@@ -179,7 +140,7 @@ const IdentificaItem = () => {
                 {result.etiquetes.map((tag, i) => (
                   <span
                     key={i}
-                    className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold uppercase rounded"
+                    className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 text-[10px] font-bold uppercase rounded-md shadow-sm"
                   >
                     #{tag}
                   </span>
@@ -189,17 +150,6 @@ const IdentificaItem = () => {
           </div>
         )}
       </div>
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        @keyframes scan {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(100%); }
-        }
-      `,
-        }}
-      />
     </div>
   );
 };

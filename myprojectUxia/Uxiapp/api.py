@@ -9,6 +9,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from .models import Expo, Item, Imatge, Etiqueta, Intent
+from .ai_utils import process_intent
 
 api = NinjaAPI(title="UXIA API", version="2.0")
 
@@ -130,10 +131,12 @@ def test(request):
 
 
 @api.get("/expos", response=List[ExpoSchema], tags=["Exposicions"])
-def list_expos(request, estat: Optional[str] = None):
+def list_expos(request, estat: Optional[str] = None, propietari: Optional[str] = None):
     qs = Expo.objects.all()
     if estat:
         qs = qs.filter(estat=estat)
+    if propietari:
+        qs = qs.filter(propietari__username=propietari)
     return qs
 
 
@@ -231,7 +234,6 @@ def list_intents(request, item_id: Optional[int] = None, encert: Optional[bool] 
     if encert is not None:
         qs = qs.filter(encert=encert)
     return qs
-from .ai_utils import process_intent
 
 # ─── Endpoints: IA (marIA 2) ──────────────────────────────────────────────────
 
