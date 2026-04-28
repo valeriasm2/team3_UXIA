@@ -23,6 +23,9 @@ const MainApp = () => {
   const [indexItem, setIndexItem] = useState(0);
   const [itemSeleccionat, setItemSeleccionat] = useState(null);
   const [imatgesItem, setImatgesItem] = useState([]);
+  const [selectedItemIdForCarousel, setSelectedItemIdForCarousel] =
+    useState(null);
+  const [itemIdToShowModal, setItemIdToShowModal] = useState(null);
 
   // FETCH EXPOSICIONS
   useEffect(() => {
@@ -39,11 +42,41 @@ const MainApp = () => {
         .then((res) => res.json())
         .then((data) => {
           setItems(data);
-          setIndexItem(0);
+
+          // Si hay un item seleccionado para mostrar en el carrusel, encontrar su índice
+          if (selectedItemIdForCarousel) {
+            const itemIndex = data.findIndex(
+              (item) => item.id === selectedItemIdForCarousel,
+            );
+            setIndexItem(itemIndex >= 0 ? itemIndex : 0);
+            setSelectedItemIdForCarousel(null);
+          } else {
+            setIndexItem(0);
+          }
         })
         .catch((err) => console.error("Error items:", err));
     }
-  }, [expoActual]);
+  }, [expoActual, selectedItemIdForCarousel]);
+
+  // Mostrar modal del item cuando esté disponible
+  useEffect(() => {
+    if (itemIdToShowModal && items.length > 0) {
+      const itemToShow = items.find((item) => item.id === itemIdToShowModal);
+      if (itemToShow) {
+        (async () => {
+          setItemSeleccionat(itemToShow);
+          try {
+            const res = await fetch(`/api/imatges?item_id=${itemToShow.id}`);
+            const data = await res.json();
+            setImatgesItem(data);
+          } catch (err) {
+            console.error("Error imatges:", err);
+          }
+        })();
+        setItemIdToShowModal(null);
+      }
+    }
+  }, [itemIdToShowModal, items]);
 
   const verDetalleItem = async (item) => {
     setItemSeleccionat(item);
@@ -53,6 +86,19 @@ const MainApp = () => {
       setImatgesItem(data);
     } catch (err) {
       console.error("Error imatges:", err);
+    }
+  };
+
+  const handleSelectItem = (itemId, expoId) => {
+    // Encontrar el expo por su ID
+    const expoToSelect = expos.find((e) => e.id === expoId);
+    if (expoToSelect) {
+      // Establecer el item que se debe mostrar primero en el carrusel
+      setSelectedItemIdForCarousel(itemId);
+      // Establecer el item para mostrar en el modal
+      setItemIdToShowModal(itemId);
+      // Establecer el expo actual (esto desencadenará el useEffect para cargar los items)
+      setExpoActual(expoToSelect);
     }
   };
 
@@ -78,7 +124,11 @@ const MainApp = () => {
               verDetalleItem={verDetalleItem}
             />
           ) : (
-            <Landing expos={expos} onSelectExpo={setExpoActual} />
+            <Landing
+              expos={expos}
+              onSelectExpo={setExpoActual}
+              onSelectItem={handleSelectItem}
+            />
           )}
         </main>
 
