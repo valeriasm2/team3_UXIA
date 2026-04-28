@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 # ─── Utilitats d'upload ────────────────────────────────────────────────────────
@@ -74,6 +75,14 @@ class Expo(models.Model):
     lloc = models.CharField(max_length=100, verbose_name="Lloc")
     descripcio = models.TextField(verbose_name="Descripció")
     imatge = models.ImageField(upload_to=expo_upload, verbose_name="Imatge")
+    propietari = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='expos',
+        verbose_name="Propietari",
+        null=True,
+        blank=True
+    )
 
     estat = models.CharField(
         max_length=20,

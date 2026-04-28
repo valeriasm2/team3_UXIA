@@ -5,6 +5,7 @@ from django.core.files import File
 from django.conf import settings
 from datetime import date, timedelta
 from faker import Faker
+from django.contrib.auth.models import User
 from Uxiapp.models import Expo, Item, Imatge
 
 class Command(BaseCommand):
@@ -16,6 +17,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         count = options['count']
         fake = Faker(['es_ES'])
+        
+        # Obtener o crear usuario admin por defecto
+        admin_user, _ = User.objects.get_or_create(
+            username='admin',
+            defaults={'email': 'admin@uxia.local', 'is_staff': True, 'is_superuser': True}
+        )
         
         for _ in range(count):
             # 1. GENERAR NOMBRE DE EXPO ALEATORIO
@@ -37,6 +44,7 @@ class Command(BaseCommand):
                 lloc=f"Recinto {fake.street_name()}, {ciudad}",
                 descripcio=f"Exposición de vehículos en {ciudad}. Ven a descubrir los últimos modelos.",
                 estat=Expo.Estat.DISPONIBLE,
+                propietari=admin_user,
             )
             
             # 3. OBTENER CATÁLOGO DE IMÁGENES DE RANDOM_FOTOS
