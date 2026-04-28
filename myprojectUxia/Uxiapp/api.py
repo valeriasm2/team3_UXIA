@@ -1,15 +1,29 @@
 from ninja import NinjaAPI, ModelSchema, Schema, File
 from ninja.files import UploadedFile
+from ninja.errors import HttpError
 from typing import List, Optional
 import base64
 import requests
 from django.conf import settings
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
 from .models import Expo, Item, Imatge, Etiqueta, Intent
 
 api = NinjaAPI(title="UXIA API", version="2.0")
 
 
 # ─── Schemas ──────────────────────────────────────────────────────────────────
+
+class LoginSchema(Schema):
+    username: str
+    password: str
+
+
+class LoginResponseSchema(Schema):
+    token: str
+    user: str
+
 
 class EtiquetaSchema(ModelSchema):
     class Meta:
@@ -74,7 +88,34 @@ class IdentifyResponseSchema(Schema):
     intent_id: int
 
 
-# ─── Endpoints: Expos ─────────────────────────────────────────────────────────
+# ─── Endpoints: Auth ──────────────────────────────────────────────────────────
+
+@api.post("/auth/login", response=LoginResponseSchema, tags=["Auth"])
+def login(request, payload: LoginSchema):
+    """
+    Endpoint de login para el panel de administración.
+    Requiere nombre de usuario y contraseña.
+    Retorna un token de autenticación.
+    """
+    user = authenticate(username=payload.username, password=payload.password)
+    
+    if user is None:
+        raise HttpError(401, "Credenciales inválidas")
+    
+    # Solo permitir login si el usuario es staff (administrador)
+    if not user.is_staff:
+        raise HttpError(403, "No tienes permisos para acceder al panel de administración")
+    
+    # Obtener o crear el token
+    token, created = Token.objects.get_or_create(user=user)
+    
+    return {
+        "token": token.key,
+        "user": user.username
+    }
+
+
+# ─── Endpoints: Proves ────────────────────────────────────────────────────────
 
 @api.get("/test", tags=["Proves"])
 def test(request):

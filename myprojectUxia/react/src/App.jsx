@@ -1,13 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ItemDetailModal from "./components/ItemDetailModal";
 import Landing from "./pages/Landing";
 import ExpoDetail from "./pages/ExpoDetail";
 import Historial from "./pages/Historial";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 
-const AppContent = () => {
+// ProtectedRoute component para proteger las rutas de admin
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("adminToken");
+  return token ? children : <Navigate to="/admin" />;
+};
+
+const MainApp = () => {
   const [expos, setExpos] = useState([]);
   const [expoActual, setExpoActual] = useState(null);
   const [items, setItems] = useState([]);
@@ -92,7 +100,19 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<AppContent />} />
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Main App Routes */}
+        <Route path="/" element={<MainApp />} />
         <Route path="/historial" element={<Historial />} />
       </Routes>
     </BrowserRouter>

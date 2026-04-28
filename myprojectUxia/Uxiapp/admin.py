@@ -80,15 +80,15 @@ class EtiquetaAdmin(admin.ModelAdmin):
 
 @admin.register(Expo)
 class ExpoAdmin(admin.ModelAdmin):
-    list_display = ('nom', 'lloc', 'data_inici', 'data_fi', '_estat_badge', '_portada', 'num_items')
-    list_filter = ('estat',)
-    search_fields = ('nom', 'lloc')
+    list_display = ('nom', 'lloc', 'propietari', 'data_inici', 'data_fi', '_estat_badge', '_portada', 'num_items')
+    list_filter = ('estat', 'propietari')
+    search_fields = ('nom', 'lloc', 'propietari__username')
     date_hierarchy = 'data_inici'
     inlines = [ItemInline]
     readonly_fields = ('_portada_gran',)
     fieldsets = (
         ('Informació general', {
-            'fields': ('nom', 'descripcio', 'lloc', 'data_inici', 'data_fi')
+            'fields': ('nom', 'descripcio', 'lloc', 'propietari', 'data_inici', 'data_fi')
         }),
         ('Imatge i estat', {
             'fields': ('imatge', '_portada_gran', 'estat')
