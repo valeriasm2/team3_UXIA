@@ -5,13 +5,10 @@ from typing import List, Optional
 import base64
 import requests
 from django.conf import settings
-<<<<<<< HEAD
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User, Group
 from rest_framework.authtoken.models import Token
-=======
 from django.db import models
->>>>>>> remotes/origin/spc22-CercadorPolimorfic
 from .models import Expo, Item, Imatge, Etiqueta, Intent
 
 api = NinjaAPI(title="UXIA API", version="2.0")
@@ -92,41 +89,6 @@ class IdentifyResponseSchema(Schema):
     intent_id: int
 
 
-<<<<<<< HEAD
-# ─── Endpoints: Auth ──────────────────────────────────────────────────────────
-
-@api.post("/auth/login", response=LoginResponseSchema, tags=["Auth"])
-def login(request, payload: LoginSchema):
-    """
-    Endpoint de login para el panel de administración.
-    Requiere nombre de usuario y contraseña.
-    Retorna un token de autenticación.
-    El usuario debe pertenecer al grupo 'Admins'.
-    """
-    user = authenticate(username=payload.username, password=payload.password)
-    
-    if user is None:
-        raise HttpError(401, "Credenciales inválidas")
-    
-    # Solo permitir login si el usuario es staff (administrador)
-    if not user.is_staff:
-        raise HttpError(403, "No tienes permisos para acceder al panel de administración")
-    
-    # Verificar que el usuario pertenece al grupo 'Admins'
-    if not user.groups.filter(name="Admins").exists():
-        raise HttpError(403, "El usuario debe pertenecer al grupo 'Admins'")
-    
-    # Obtener o crear el token
-    token, created = Token.objects.get_or_create(user=user)
-    
-    return {
-        "token": token.key,
-        "user": user.username
-    }
-
-
-# ─── Endpoints: Proves ────────────────────────────────────────────────────────
-=======
 class SearchResultSchema(Schema):
     """Schema polimórfic per a resultats de cerca (Expos o Items)"""
     id: int
@@ -141,7 +103,6 @@ class SearchResultSchema(Schema):
 
 
 # ─── Endpoints: Expos ─────────────────────────────────────────────────────────
->>>>>>> remotes/origin/spc22-CercadorPolimorfic
 
 @api.get("/test", tags=["Proves"])
 def test(request):
