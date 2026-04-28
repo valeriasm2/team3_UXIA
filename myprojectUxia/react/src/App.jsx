@@ -16,7 +16,7 @@ export const DarkContext = createContext({ isDark: false, toggle: () => {} });
 export const useDark = () => useContext(DarkContext);
 
 const Protected = ({ children }) =>
-  localStorage.getItem("adminToken") ? children : <Navigate to="/admin" />;
+  sessionStorage.getItem("adminToken") ? children : <Navigate to="/admin" />;
 
 const MainApp = () => {
   const [expos, setExpos] = useState([]);
@@ -116,7 +116,6 @@ const MainApp = () => {
 
 const App = () => {
   const [isDark, setIsDark] = useState(() => {
-    localStorage.removeItem("theme");
     if (typeof window !== "undefined" && window.matchMedia) {
       return window.matchMedia("(prefers-color-scheme: dark)").matches;
     }

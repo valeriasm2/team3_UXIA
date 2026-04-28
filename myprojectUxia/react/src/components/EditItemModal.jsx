@@ -1,7 +1,7 @@
 import ItemFormModal from "./ItemFormModal";
 
 const EditItemModal = ({ item, onClose, onSuccess }) => {
-  const token = localStorage.getItem("adminToken");
+  const token = sessionStorage.getItem("adminToken");
 
   const handleSubmit = async ({
     nom,
@@ -15,27 +15,25 @@ const EditItemModal = ({ item, onClose, onSuccess }) => {
     formData.append("descripcio", descripcio);
     etiquetesIds.forEach((id) => formData.append("etiquetes_ids", id));
 
-    // Filtrar imágenes existentes y nuevas
     const imatgesExistents = imatges.filter((img) => !(img instanceof File));
     const nuevasImatges = imatges.filter((img) => img instanceof File);
 
-    // Enviar IDs de imágenes existentes que se conservan (para eliminar las otras)
+    // IDs de imágenes existentes a conservar (las no enviadas se eliminarán en el backend)
     imatgesExistents.forEach((img) => {
-      if (img.id) {
-        formData.append("imatges_conservadas_ids", img.id);
-      }
+      if (img.id) formData.append("imatges_conservadas_ids", img.id);
     });
 
-    // Si se agregan nuevas imágenes, enviar el índice de la destacada entre las nuevas
-    if (nuevasImatges.length > 0) {
-      formData.append("imatge_destacada_idx", imatgeDestacada || 0);
-      nuevasImatges.forEach((img) => formData.append("imatges", img));
-    } else if (imatgeDestacada !== undefined && imatges[imatgeDestacada]) {
-      // Si no hay nuevas imágenes pero cambió la destacada, enviar la ID de la imagen
-      if (imatges[imatgeDestacada].id) {
-        formData.append("imatge_destacada_id", imatges[imatgeDestacada].id);
-      } else {
-        formData.append("imatge_destacada_idx", imatgeDestacada || 0);
+    // Nuevas imágenes
+    nuevasImatges.forEach((img) => formData.append("imatges", img));
+
+    // Imagen destacada: puede ser una existente (por id) o una nueva (por índice entre las nuevas)
+    const featuredImg = imatges[imatgeDestacada];
+    if (featuredImg) {
+      if (!(featuredImg instanceof File) && featuredImg.id) {
+        formData.append("imatge_destacada_id", featuredImg.id);
+      } else if (featuredImg instanceof File) {
+        const newIdx = nuevasImatges.indexOf(featuredImg);
+        formData.append("imatge_destacada_idx", newIdx >= 0 ? newIdx : 0);
       }
     }
 

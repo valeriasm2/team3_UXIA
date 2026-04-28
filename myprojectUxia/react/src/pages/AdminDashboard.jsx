@@ -50,7 +50,7 @@ const Thumb = ({ item }) => (
 const EditBtn = ({ onClick }) => (
   <button
     onClick={onClick}
-    className="p-1.5 bg-white hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-500 hover:text-blue-600 transition"
+    className="p-1.5 bg-white dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600 rounded-lg text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
   >
     <Pencil />
   </button>
@@ -127,8 +127,8 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("adminToken");
-    const u = localStorage.getItem("adminUser");
+    const token = sessionStorage.getItem("adminToken");
+    const u = sessionStorage.getItem("adminUser");
     if (!token) {
       navigate("/admin");
       return;
@@ -142,8 +142,8 @@ const AdminDashboard = () => {
   }, [view]);
 
   const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminUser");
+    sessionStorage.removeItem("adminToken");
+    sessionStorage.removeItem("adminUser");
     navigate("/admin");
   };
 
@@ -195,20 +195,20 @@ const AdminDashboard = () => {
   const isDetail = view && typeof view === "object";
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
       {toast && (
         <div className="fixed top-4 right-4 z-50 bg-green-600 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-lg max-w-sm animate-fade-in">
           {toast}
         </div>
       )}
 
-      <header className="bg-white shadow">
+      <header className="bg-white dark:bg-slate-800 shadow dark:shadow-slate-700/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center gap-4 flex-wrap">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Panel UXIA</h1>
-            <p className="text-sm text-gray-600 mt-1">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Panel UXIA</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
               Usuari:{" "}
-              <span className="font-semibold text-gray-900">{user}</span>
+              <span className="font-semibold text-gray-900 dark:text-white">{user}</span>
             </p>
           </div>
           <div className="flex gap-3 flex-wrap">
@@ -261,10 +261,10 @@ const AdminDashboard = () => {
         {view === null && (
           <div className="min-h-96 flex items-center justify-center">
             <div className="text-center space-y-6">
-              <h2 className="text-3xl font-bold text-gray-900">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
                 Benvingut, {user}!
               </h2>
-              <p className="text-gray-500">
+              <p className="text-gray-500 dark:text-gray-400">
                 Accedeix a les teves exposicions per gestionar-les
               </p>
               <button
@@ -280,29 +280,29 @@ const AdminDashboard = () => {
         {view === "list" && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Les meves exposicions
               </h2>
               <button
                 onClick={() => setView(null)}
-                className="text-sm text-gray-500 hover:text-gray-900"
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               >
                 ← Tornar
               </button>
             </div>
 
             {loading ? (
-              <p className="text-center py-12 text-gray-500 animate-pulse">
+              <p className="text-center py-12 text-gray-500 dark:text-gray-400 animate-pulse">
                 Carregant exposicions...
               </p>
             ) : myExpos.length === 0 ? (
-              <div className="bg-white rounded-xl shadow p-12 text-center text-gray-500">
+              <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-12 text-center text-gray-500 dark:text-gray-400">
                 No tens cap exposició creada.
               </div>
             ) : (
               <>
-                <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
-                  <div className="grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b text-sm font-semibold text-gray-700">
+                <div className="hidden md:block bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden">
+                  <div className="grid grid-cols-12 gap-4 p-4 bg-gray-50 dark:bg-slate-700 border-b dark:border-slate-600 text-sm font-semibold text-gray-700 dark:text-gray-200">
                     <div className="col-span-3">Nom Exposició</div>
                     <div className="col-span-2">Estat</div>
                     <div className="col-span-4">Descripció</div>
@@ -311,17 +311,17 @@ const AdminDashboard = () => {
                   {myExpos.map((expo) => (
                     <div
                       key={expo.id}
-                      className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50 transition items-center"
+                      className="grid grid-cols-12 gap-4 p-4 border-b dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition items-center"
                     >
                       <div
                         className="col-span-3 cursor-pointer"
                         onClick={() => setView(expo)}
                       >
-                        <div className="font-semibold text-gray-900 hover:text-blue-700">
+                        <div className="font-semibold text-gray-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-400">
                           {expo.nom}
                         </div>
-                        <div className="text-sm text-gray-500">{expo.lloc}</div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">{expo.lloc}</div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500">
                           {expo.data_inici} → {expo.data_fi}
                         </div>
                       </div>
@@ -332,7 +332,7 @@ const AdminDashboard = () => {
                           {expo.estat}
                         </span>
                       </div>
-                      <div className="col-span-4 text-sm text-gray-600 line-clamp-2">
+                      <div className="col-span-4 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
                         {expo.descripcio || "Sense descripció"}
                       </div>
                       <div className="col-span-3 flex gap-2 flex-wrap items-center">
@@ -340,7 +340,7 @@ const AdminDashboard = () => {
                           <Thumb key={item.id} item={item} />
                         ))}
                         {expo.items?.length > 3 && (
-                          <span className="text-xs text-blue-600">
+                          <span className="text-xs text-blue-600 dark:text-blue-400">
                             +{expo.items.length - 3}
                           </span>
                         )}
@@ -354,17 +354,17 @@ const AdminDashboard = () => {
                   {myExpos.map((expo) => (
                     <div
                       key={expo.id}
-                      className="bg-white rounded-lg shadow p-4"
+                      className="bg-white dark:bg-slate-800 rounded-lg shadow p-4"
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div
                           className="flex-1 cursor-pointer"
                           onClick={() => setView(expo)}
                         >
-                          <h3 className="font-bold text-gray-900">
+                          <h3 className="font-bold text-gray-900 dark:text-white">
                             {expo.nom}
                           </h3>
-                          <p className="text-sm text-gray-500">{expo.lloc}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{expo.lloc}</p>
                         </div>
                         <div className="flex items-center gap-2 ml-2">
                           <span
@@ -376,7 +376,7 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                       <p
-                        className="text-sm text-gray-600 line-clamp-2 mb-3 cursor-pointer"
+                        className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-3 cursor-pointer"
                         onClick={() => setView(expo)}
                       >
                         {expo.descripcio || "Sense descripció"}
@@ -389,7 +389,7 @@ const AdminDashboard = () => {
                           <Thumb key={item.id} item={item} />
                         ))}
                         {expo.items?.length > 4 && (
-                          <span className="self-center text-xs text-blue-600">
+                          <span className="self-center text-xs text-blue-600 dark:text-blue-400">
                             +{expo.items.length - 4} més
                           </span>
                         )}
@@ -408,17 +408,17 @@ const AdminDashboard = () => {
               <div>
                 <button
                   onClick={() => setView("list")}
-                  className="text-sm text-gray-500 hover:text-gray-900 mb-2 block"
+                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-2 block"
                 >
                   ← Exposicions
                 </button>
                 <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                     {view.nom}
                   </h2>
                   <EditBtn onClick={() => setEditExpo(view)} />
                 </div>
-                <p className="text-sm text-gray-500 mt-1">{view.lloc}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{view.lloc}</p>
                 <span
                   className={`mt-2 inline-block px-2.5 py-1 text-xs font-semibold rounded-full ${badge(view.estat)}`}
                 >
@@ -438,9 +438,9 @@ const AdminDashboard = () => {
                 {adminItems.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-white rounded-xl shadow hover:shadow-md transition overflow-hidden flex flex-col"
+                    className="bg-white dark:bg-slate-800 rounded-xl shadow hover:shadow-md transition overflow-hidden flex flex-col"
                   >
-                    <div className="h-48 bg-gray-100 overflow-hidden">
+                    <div className="h-48 bg-gray-100 dark:bg-slate-700 overflow-hidden">
                       {item.imatge_destacada ? (
                         <img
                           src={item.imatge_destacada}
@@ -448,31 +448,31 @@ const AdminDashboard = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-4xl text-gray-300">
+                        <div className="w-full h-full flex items-center justify-center text-4xl text-gray-300 dark:text-gray-600">
                           📷
                         </div>
                       )}
                     </div>
                     <div className="p-4 flex flex-col flex-1">
                       <div className="flex items-start justify-between gap-2 mb-1">
-                        <h4 className="text-sm font-semibold text-gray-900 leading-snug">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug">
                           {item.nom}
                         </h4>
                         <button
                           onClick={() => openEditItem(item)}
-                          className="shrink-0 p-1.5 bg-gray-100 hover:bg-blue-100 rounded-lg text-gray-500 hover:text-blue-600 transition"
+                          className="shrink-0 p-1.5 bg-gray-100 dark:bg-slate-700 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg text-gray-500 dark:text-gray-400 hover:text-blue-600 transition"
                         >
                           <Pencil />
                         </button>
                       </div>
                       {item.descripcio && (
-                        <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">
                           {item.descripcio}
                         </p>
                       )}
                       {item.altres_imatges?.length > 0 && (
                         <div className="mt-auto">
-                          <p className="text-xs text-gray-400 mb-1">
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">
                             Més imatges:
                           </p>
                           <div className="flex gap-1 flex-wrap">
@@ -492,8 +492,8 @@ const AdminDashboard = () => {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-xl shadow p-12 text-center">
-                <p className="text-gray-500 mb-4">
+              <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-12 text-center">
+                <p className="text-gray-500 dark:text-gray-400 mb-4">
                   Aquesta exposició no té ítems.
                 </p>
                 <button

@@ -35,9 +35,8 @@ const AdminLogin = () => {
 
       if (response.ok) {
         const data = await response.json();
-        // Guardar el token en localStorage
-        localStorage.setItem("adminToken", data.token);
-        localStorage.setItem("adminUser", data.user);
+        sessionStorage.setItem("adminToken", data.token);
+        sessionStorage.setItem("adminUser", data.user);
         // Redirigir al dashboard
         navigate("/admin/dashboard");
       } else {

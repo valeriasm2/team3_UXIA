@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 const EditExpoModal = ({ expo, onClose, onSuccess }) => {
   const [nom, setNom] = useState(expo.nom || "");
@@ -33,7 +33,7 @@ const EditExpoModal = ({ expo, onClose, onSuccess }) => {
       formData.append("data_fi", dataFi);
       if (imatge) formData.append("imatge", imatge);
 
-      const token = localStorage.getItem("adminToken");
+      const token = sessionStorage.getItem("adminToken");
       const res = await fetch(`/api/expos/${expo.id}`, {
         method: "PUT",
         headers: token ? { Authorization: `Token ${token}` } : {},

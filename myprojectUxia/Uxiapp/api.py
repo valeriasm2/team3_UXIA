@@ -264,59 +264,54 @@ def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatg
 
     item.etiquetes.set(Etiqueta.objects.filter(id__in=data.etiquetes_ids))
 
-    # Manejar eliminación de imágenes conservadas
-    if data.imatges_conservadas_ids:
-        imatges_a_eliminar = item.imatges.exclude(id__in=data.imatges_conservadas_ids)
-        if imatges_a_eliminar.exists():
-            imatges_a_eliminar.delete()
-            
-            # Si se eliminó la imagen destacada, marcar la primera como destacada
-            if not item.imatges.filter(es_destacada=True).exists():
-                primera_img = item.imatges.first()
-                if primera_img:
-                    primera_img.es_destacada = True
-                    primera_img.save()
-            
-            # Marcar expo como ACTUALITZABLE si se eliminaron imágenes
-            expo = item.expo
-            if expo.estat != Expo.Estat.ACTUALITZABLE:
-                expo.estat = Expo.Estat.ACTUALITZABLE
-                expo.save()
+    images_changed = False
 
-    # Manejar cambio de imagen destacada (sin nuevas imágenes)
-    if data.imatge_destacada_id and not imatges:
-        # Desmarcar todas las imágenes destacadas de este item
+    # Eliminar imágenes no conservadas (siempre, incluso si la lista está vacía)
+    a_eliminar = item.imatges.exclude(id__in=data.imatges_conservadas_ids)
+    if a_eliminar.exists():
+        images_changed = True
+        a_eliminar.delete()
+
+    # Añadir nuevas imágenes (sin marcar destacada aún)
+    new_image_ids = []
+    if imatges:
+        images_changed = True
+        existing_count = item.imatges.count()
+        for idx, img_file in enumerate(imatges):
+            new_img = Imatge.objects.create(
+                imatge=img_file,
+                item=item,
+                ordre=existing_count + idx,
+                es_publica=True,
+                es_destacada=False,
+            )
+            new_image_ids.append(new_img.id)
+
+    # Establecer imagen destacada
+    if data.imatge_destacada_id:
+        # Destacada es una imagen existente (conservada o ya estaba)
         item.imatges.update(es_destacada=False)
-        # Marcar la imagen especificada como destacada
         try:
             img = Imatge.objects.get(id=data.imatge_destacada_id, item=item)
             img.es_destacada = True
             img.save()
         except Imatge.DoesNotExist:
             pass
+    elif data.imatge_destacada_idx is not None and new_image_ids:
+        # Destacada es una imagen nueva: índice dentro del array de nuevas
+        idx = data.imatge_destacada_idx
+        target_id = new_image_ids[idx] if 0 <= idx < len(new_image_ids) else new_image_ids[0]
+        item.imatges.update(es_destacada=False)
+        Imatge.objects.filter(id=target_id).update(es_destacada=True)
+    else:
+        # Sin cambio explícito: si no hay ninguna destacada, marcar la primera
+        if not item.imatges.filter(es_destacada=True).exists():
+            primera = item.imatges.first()
+            if primera:
+                primera.es_destacada = True
+                primera.save()
 
-    # Agregar nuevas imágenes
-    if imatges:
-        existing_count = item.imatges.count()
-        destacada_idx = data.imatge_destacada_idx if data.imatge_destacada_idx is not None else 0
-        
-        # Asegurar que el índice es válido
-        if destacada_idx >= len(imatges):
-            destacada_idx = 0
-        
-        # Si se van a agregar nuevas imágenes, desmarcar la actual destacada
-        if existing_count > 0:
-            item.imatges.update(es_destacada=False)
-        
-        for idx, img_file in enumerate(imatges):
-            Imatge.objects.create(
-                imatge=img_file,
-                item=item,
-                ordre=existing_count + idx,
-                es_publica=True,
-                es_destacada=(idx == destacada_idx),
-            )
-        
+    if images_changed:
         expo = item.expo
         if expo.estat != Expo.Estat.ACTUALITZABLE:
             expo.estat = Expo.Estat.ACTUALITZABLE

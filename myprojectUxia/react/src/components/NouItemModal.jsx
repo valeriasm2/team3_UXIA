@@ -16,7 +16,7 @@ const NouItemModal = ({ expo, onClose, onSuccess }) => {
     etiquetesIds.forEach((id) => formData.append("etiquetes_ids", id));
     imatges.forEach((img) => formData.append("imatges", img));
 
-    const token = localStorage.getItem("adminToken");
+    const token = sessionStorage.getItem("adminToken");
     const res = await fetch("/api/items", {
       method: "POST",
       headers: token ? { Authorization: `Token ${token}` } : {},

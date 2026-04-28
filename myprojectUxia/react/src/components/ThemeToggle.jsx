@@ -1,37 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useDark } from "../App";
 
 export function ThemeToggle() {
-  const [isDark, setIsDark] = useState(false)
-
-  useEffect(() => {
-    // Detectar preferencia guardada o del dispositivo
-    const savedTheme = localStorage.getItem('theme')
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const shouldBeDark = savedTheme ? savedTheme === 'dark' : prefersDark
-
-    setIsDark(shouldBeDark)
-    applyTheme(shouldBeDark)
-  }, [])
-
-  const applyTheme = (dark) => {
-    if (dark) {
-      document.documentElement.classList.add('dark-mode')
-    } else {
-      document.documentElement.classList.remove('dark-mode')
-    }
-    localStorage.setItem('theme', dark ? 'dark' : 'light')
-  }
-
-  const toggleTheme = () => {
-    setIsDark(!isDark)
-    applyTheme(!isDark)
-  }
+  const { isDark, toggle } = useDark();
 
   return (
     <button
       className="theme-toggle"
-      onClick={toggleTheme}
-      aria-label={`Cambiar a modo ${isDark ? 'claro' : 'oscuro'}`}
+      onClick={toggle}
+      aria-label={`Cambiar a modo ${isDark ? "claro" : "oscuro"}`}
     >
       {isDark ? (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -51,5 +27,5 @@ export function ThemeToggle() {
         </svg>
       )}
     </button>
-  )
+  );
 }
