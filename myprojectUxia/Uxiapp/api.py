@@ -91,9 +91,9 @@ class CreateItemSchema(Schema):
 
 
 class UpdateItemSchema(Schema):
-    nom: Optional[str] = None
-    descripcio: Optional[str] = None
-    etiquetes_ids: Optional[List[int]] = None
+    nom: str
+    descripcio: str
+    etiquetes_ids: List[int] = []
 
 
 class ExpoDetailSchema(ModelSchema):
@@ -194,6 +194,38 @@ def list_items(request, expo_id: Optional[int] = None, etiqueta_id: Optional[int
 @api.get("/items/{item_id}", response=ItemDetailSchema, tags=["Ítems"])
 def get_item(request, item_id: int):
     return Item.objects.prefetch_related('etiquetes', 'imatges', 'intents').get(pk=item_id)
+
+
+@api.put("/items/{item_id}", response=ItemSchema, tags=["Ítems"])
+def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatges: List[UploadedFile] = File(None)):
+    """
+    Actualitza nom, descripció i etiquetes d'un ítem.
+    Si s'afegeixen imatges noves, l'estat de l'expo passa a ACTUALITZABLE.
+    """
+    item = Item.objects.get(pk=item_id)
+    item.nom = data.nom
+    item.descripcio = data.descripcio
+    item.save()
+
+    etiquetes = Etiqueta.objects.filter(id__in=data.etiquetes_ids)
+    item.etiquetes.set(etiquetes)
+
+    if imatges:
+        existing_count = item.imatges.count()
+        for idx, img_file in enumerate(imatges):
+            Imatge.objects.create(
+                imatge=img_file,
+                item=item,
+                ordre=existing_count + idx,
+                es_publica=True,
+                es_destacada=(existing_count == 0 and idx == 0),
+            )
+        expo = item.expo
+        if expo.estat != Expo.Estat.ACTUALITZABLE:
+            expo.estat = Expo.Estat.ACTUALITZABLE
+            expo.save()
+
+    return item
 
 
 @api.post("/items", response=ItemSchema, tags=["Ítems"])

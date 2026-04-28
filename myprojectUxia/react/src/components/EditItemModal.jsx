@@ -1,17 +1,16 @@
 import ItemFormModal from "./ItemFormModal";
 
-const NouItemModal = ({ expo, onClose, onSuccess }) => {
+const EditItemModal = ({ item, onClose, onSuccess }) => {
   const handleSubmit = async ({ nom, descripcio, etiquetesIds, imatges }) => {
     const formData = new FormData();
     formData.append("nom", nom);
     formData.append("descripcio", descripcio);
-    formData.append("expo_id", expo.id);
     etiquetesIds.forEach((id) => formData.append("etiquetes_ids", id));
     imatges.forEach((img) => formData.append("imatges", img));
 
     const token = localStorage.getItem("adminToken");
-    const res = await fetch("/api/items", {
-      method: "POST",
+    const res = await fetch(`/api/items/${item.id}`, {
+      method: "PUT",
       headers: token ? { Authorization: `Token ${token}` } : {},
       body: formData,
     });
@@ -19,19 +18,24 @@ const NouItemModal = ({ expo, onClose, onSuccess }) => {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.detail || `Error ${res.status}`);
     }
-    const item = await res.json();
-    onSuccess(item, imatges.length > 0);
+    const updated = await res.json();
+    onSuccess(updated, imatges.length > 0);
   };
 
   return (
     <ItemFormModal
-      title="+ Nou Ítem"
-      subtitle={`Expo: ${expo.nom}`}
+      title="Editar Ítem"
+      subtitle={item.nom}
+      initialValues={{
+        nom: item.nom,
+        descripcio: item.descripcio,
+        etiquetesIds: item.etiquetes?.map((e) => e.id) || [],
+      }}
       onSubmit={handleSubmit}
       onClose={onClose}
-      submitLabel="Crear Ítem"
+      submitLabel="Guardar canvis"
     />
   );
 };
 
-export default NouItemModal;
+export default EditItemModal;
