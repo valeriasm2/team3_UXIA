@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import ExpoCard from "../components/ExpoCard";
 import IdentificaItem from "../IdentificaItem";
 
@@ -45,7 +45,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
           <h2 className="text-4xl font-extrabold text-slate-900">
             Explora UXIA
           </h2>
-          <p className="texto-suave">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             Busca una ciutat, esdeveniment o cotxe per veure els continguts de
             l'exposició.
           </p>
@@ -169,7 +169,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
             {/* NO RESULTS */}
             {expoResults.length === 0 && itemResults.length === 0 && (
               <div className="text-center py-16 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                <p className="texto-suave">
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
                   No hi ha coincidències per "{searchTerm}"
                 </p>
               </div>
@@ -206,7 +206,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
           <h2 className="text-2xl font-bold text-slate-800 mb-2">
             No saps quin cotxe és?
           </h2>
-          <p className="texto-suave">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             Utilitza la nostra identificació visual "marIA"
           </p>
         </div>
