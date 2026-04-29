@@ -65,16 +65,29 @@ const IdentificaItem = () => {
     e.target.value = "";
   };
 
+  const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return null;
+  };
+
+  const setCookie = (name, value, days = 365) => {
+    const date = new Date();
+    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/; SameSite=Lax`;
+  };
+
   const identify = async (file) => {
     setLoading(true);
     setResult(null);
     const body = new FormData();
     body.append("imatge", file);
     
-    // Obtenir cookie_id de localStorage
-    const savedCookie = localStorage.getItem("uxia_cookie_id");
-    if (savedCookie) {
-      body.append("cookie_id", savedCookie);
+    // Obtenir ID de la cookie directament (per sincronitzar historial)
+    const userId = getCookie("uxia_user_id");
+    if (userId) {
+      body.append("cookie_id", userId);
     }
 
     try {
@@ -84,9 +97,9 @@ const IdentificaItem = () => {
       const data = await res.json();
       setResult(data);
       
-      // Desar cookie_id si ens en donen un de nou o el mateix
-      if (data.cookie_id) {
-        localStorage.setItem("uxia_cookie_id", data.cookie_id);
+      // Sincronitzar la cookie si el servidor en genera una de nova o la confirma
+      if (data.cookie_id && !userId) {
+        setCookie("uxia_user_id", data.cookie_id);
       }
     } catch (err) {
       setResult({ descripcio: `Error: ${err.message}`, etiquetes: ["error"] });

@@ -42,22 +42,11 @@ const MainApp = () => {
     });
   }, [nav.activeExpo]);
 
-<<<<<<< HEAD
-  const verDetalleItem = async (item) => {
-    try {
-      const res = await fetch(`/api/items/${item.id}`);
-      const data = await res.json();
-      setItemSeleccionat(data);
-      setImatgesItem(data.imatges || []);
-    } catch (err) {
-      console.error("Error imatges i detalls:", err);
-=======
   const showDetail = async (item) => {
     try {
       setDetail({ item, images: await getItemImages(item.id) });
     } catch {
       setDetail({ item, images: [] });
->>>>>>> pre
     }
   };
 
