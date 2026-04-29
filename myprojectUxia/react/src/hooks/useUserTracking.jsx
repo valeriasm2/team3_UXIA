@@ -31,9 +31,10 @@ export const useUserTracking = () => {
   const initUser = async () => {
     try {
       let cookieId = getCookie(COOKIE_NAME);
-      
+
+      const apiUrl = import.meta.env.VITE_API_URL || '';
       const response = await fetch(
-        `http://127.0.0.1:8000/api/usuari/identificar?cookie_id=${cookieId || ''}`,
+        `${apiUrl}/api/usuari/identificar?cookie_id=${cookieId || ''}`,
         {
           method: 'POST',
           credentials: 'include',

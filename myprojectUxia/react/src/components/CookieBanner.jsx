@@ -7,15 +7,9 @@ const CookieBanner = ({ onAccept, onReject }) => {
         <div className="text-sm sm:text-base text-center sm:text-left">
           <span className="text-xl mr-2"></span>
           Utilitzem cookies pròpies i de tercers per recordar les teves identificacions 
-          i oferir-te una millor experiència. Pots acceptar o rebutjar-les.
+          i oferir-te una millor experiència. Només pots acceptar-les.
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={onReject}
-            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-sm font-medium transition"
-          >
-            Rebutjar
-          </button>
           <button
             onClick={onAccept}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition"

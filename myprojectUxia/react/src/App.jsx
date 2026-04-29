@@ -36,27 +36,11 @@ const MainApp = () => {
   }, []);
 
   useEffect(() => {
-    if (!nav.activeExpo) return;
+    if (!nav.activeExpo || nav.items.length > 0) return;
     getItems(nav.activeExpo.id).then((data) => {
-      const index = selectedItemId
-        ? Math.max(
-            0,
-            data.findIndex((i) => i.id === selectedItemId),
-          )
-        : 0;
-      setSelectedItemId(null);
-      setNav((p) => ({ ...p, items: data, index }));
+      setNav((p) => ({ ...p, items: data, index: 0 }));
     });
   }, [nav.activeExpo]);
-
-  useEffect(() => {
-    if (!modalItemId || !nav.items.length) return;
-    const item = nav.items.find((i) => i.id === modalItemId);
-    if (item) {
-      showDetail(item);
-      setModalItemId(null);
-    }
-  }, [modalItemId, nav.items]);
 
   const showDetail = async (item) => {
     try {
@@ -66,12 +50,22 @@ const MainApp = () => {
     }
   };
 
-  const onSelectItem = (itemId, expoId) => {
+  const onSelectItem = async (itemId, expoId) => {
     const expo = expos.find((e) => e.id === expoId);
     if (!expo) return;
-    setSelectedItemId(itemId);
-    setModalItemId(itemId);
+
+    // Primer posem l'expo activa
     setNav({ activeExpo: expo, items: [], index: 0 });
+    setSelectedItemId(itemId);
+    
+    // Carreguem els ítems immediatament i obrim el detall
+    const items = await getItems(expoId);
+    const item = items.find((i) => i.id === itemId);
+    const index = items.findIndex((i) => i.id === itemId);
+    
+    setNav({ activeExpo: expo, items, index: index >= 0 ? index : 0 });
+    if (item) showDetail(item);
+    setSelectedItemId(null);
   };
 
   return (

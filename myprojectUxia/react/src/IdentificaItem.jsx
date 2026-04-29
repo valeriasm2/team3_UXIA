@@ -70,10 +70,24 @@ const IdentificaItem = () => {
     setResult(null);
     const body = new FormData();
     body.append("imatge", file);
+    
+    // Obtenir cookie_id de localStorage
+    const savedCookie = localStorage.getItem("uxia_cookie_id");
+    if (savedCookie) {
+      body.append("cookie_id", savedCookie);
+    }
+
     try {
       const res = await fetch("/api/identify", { method: "POST", body });
       if (!res.ok) throw new Error(`Error ${res.status}`);
-      setResult(await res.json());
+      
+      const data = await res.json();
+      setResult(data);
+      
+      // Desar cookie_id si ens en donen un de nou o el mateix
+      if (data.cookie_id) {
+        localStorage.setItem("uxia_cookie_id", data.cookie_id);
+      }
     } catch (err) {
       setResult({ descripcio: `Error: ${err.message}`, etiquetes: ["error"] });
     } finally {

@@ -46,23 +46,27 @@ def identify_image_data(image_bytes):
     Cridar al servei Ollama per identificar una imatge.
     Retorna (descripcio, etiquetes)
     """
-    image_data = base64.b64encode(image_bytes).decode('utf-8')
-    
-    prompt = (
-        "Identifica aquest objecte de l'exposició. Respon en català. "
-        "Proporciona una descripció breu de 5 línies de l'objecte i després una llista d'etiquetes clau. "
-        "Format obligatori: DESCRIPCIÓ | etiqueta1, etiqueta2, etiqueta3"
-    )
-    
-    client = ollama.Client(host=settings.OLLAMA_URL)
-    response = client.chat(
-         model='qwen3-vl:30b',
-         messages=[{
-             'role': 'user',
-             'content': prompt,
-             'images': [image_data]
-         }]
-    )
+    try:
+        image_data = base64.b64encode(image_bytes).decode('utf-8')
+
+        prompt = (
+            "Identifica aquest objecte de l'exposició. Respon en català. "
+            "Proporciona una descripció breu de 5 línies de l'objecte i després una llista d'etiquetes clau. "
+            "Format obligatori: DESCRIPCIÓ | etiqueta1, etiqueta2, etiqueta3"
+        )
+
+        client = ollama.Client(host=settings.OLLAMA_URL)
+        response = client.chat(
+             model='qwen2.5vl:7b',
+             messages=[{
+                 'role': 'user',
+                 'content': prompt,
+                 'images': [image_data]
+             }]
+        )
+    except Exception as e:
+        print(f"Error connectant amb Ollama: {str(e)}")
+        raise Exception(f"No s'ha pogut connectar amb el servei d'IA: {str(e)}")
     
     raw_text = response['message']['content'].strip()
     descripcio = ""
@@ -113,10 +117,10 @@ def process_intent(intent):
     try:
         with intent.imatge.open('rb') as f:
             image_bytes = f.read()
-        
+
         descripcio, etiquetes = identify_image_data(image_bytes)
         best_item, score = solve_best_item(descripcio, etiquetes)
-        
+
         intent.descripcio_ia = descripcio
         intent.etiquetes_ia = etiquetes
         intent.item = best_item
@@ -125,6 +129,10 @@ def process_intent(intent):
         intent.save()
         return True
     except Exception as e:
-        intent.descripcio_ia = f"Error: {str(e)}"
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"Error en process_intent: {error_detail}")
+        intent.descripcio_ia = f"Error en processar la imatge: {str(e)}"
+        intent.etiquetes_ia = ["error"]
         intent.save()
         return False

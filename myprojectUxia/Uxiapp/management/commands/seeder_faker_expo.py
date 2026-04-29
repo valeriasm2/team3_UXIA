@@ -18,12 +18,15 @@ class Command(BaseCommand):
         count = options['count']
         fake = Faker(['es_ES'])
         
-        # Obtener o crear usuario admin por defecto
-        admin_user, _ = User.objects.get_or_create(
-            username='admin',
-            defaults={'email': 'admin@uxia.local', 'is_staff': True, 'is_superuser': True}
-        )
-        
+        # Obtener todos los usuarios disponibles
+        usuarios = list(User.objects.all())
+        if not usuarios:
+            admin_user, _ = User.objects.get_or_create(
+                username='admin',
+                defaults={'email': 'admin@uxia.local', 'is_staff': True, 'is_superuser': True}
+            )
+            usuarios = [admin_user]
+
         for _ in range(count):
             # 1. GENERAR NOMBRE DE EXPO ALEATORIO
             ciudad = fake.city()
@@ -44,7 +47,7 @@ class Command(BaseCommand):
                 lloc=f"Recinto {fake.street_name()}, {ciudad}",
                 descripcio=f"Exposición de vehículos en {ciudad}. Ven a descubrir los últimos modelos.",
                 estat=Expo.Estat.DISPONIBLE,
-                propietari=admin_user,
+                propietari=random.choice(usuarios),
             )
             
             # 3. OBTENER CATÁLOGO DE IMÁGENES DE RANDOM_FOTOS

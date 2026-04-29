@@ -10,19 +10,31 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import environ
 from pathlib import Path
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Initialize environ
+env = environ.Env(
+    DJANGO_DEBUG=(bool, False),
+    #OLLAMA_URL=(str, 'http://localhost:11434'),
+    OLLAMA_URL=(str, 'http://192.168.1.24:11434'),
+)
+# Reading .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-y3)mn^hlu@a-^nklw_i2wb%=vlmsjet%r8fgqjhfra()wh=5*e'
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-y3)mn^hlu@a-^nklw_i2wb%=vlmsjet%r8fgqjhfra()wh=5*e')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DJANGO_DEBUG', default=env('DEBUG', default=False))
+if isinstance(DEBUG, str):
+    DEBUG = DEBUG.lower() == 'on' or DEBUG.lower() == 'true'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['uxiaweb3.ieti.site', 'localhost', '127.0.0.1', '.ieti.site'])
 
 # Application definition
 INSTALLED_APPS = [
@@ -70,12 +82,23 @@ TEMPLATES = [
 WSGI_APPLICATION = 'myprojectUxia.wsgi.application'
 
 # Database
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+OLLAMA_URL = env('OLLAMA_URL', default='http://localhost:11434')
+
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -111,18 +134,71 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo
+CORS_ALLOWED_ORIGINS = [
+    'http://uxiaweb3.ieti.site',
+    'https://uxiaweb3.ieti.site',
+    'http://localhost:5173',  # Només per desenvolupament local
+    'http://127.0.0.1:5173',
+]
 CORS_ALLOW_CREDENTIALS = True
 
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
     'http://uxiaweb3.ieti.site',
     'https://uxiaweb3.ieti.site',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
 ]
 
-# Ollama URL (si lo usas)
-OLLAMA_URL = 'http://localhost:11434'
+# Security settings for production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = False  # Canviar a True quan tinguis HTTPS
+    SESSION_COOKIE_SECURE = False  # Canviar a True quan tinguis HTTPS
+    CSRF_COOKIE_SECURE = False  # Canviar a True quan tinguis HTTPS
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+
+# Ollama URL
+OLLAMA_URL = os.environ.get('OLLAMA_URL', 'http://localhost:11434')
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'Uxiapp': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

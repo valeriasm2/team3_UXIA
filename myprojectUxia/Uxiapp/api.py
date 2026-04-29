@@ -44,7 +44,7 @@ class IntentSchema(ModelSchema):
 
 
 class ItemSchema(ModelSchema):
-    imatge: Optional[str] = None
+    imatge: str = ""
 
     class Meta:
         model = Item
@@ -52,10 +52,14 @@ class ItemSchema(ModelSchema):
 
     @staticmethod
     def resolve_imatge(obj):
-        first_img = obj.imatges.filter(es_publica=True).first()
-        if first_img:
-            return first_img.imatge.url
-        return None
+        try:
+            # Seleccionem la primera imatge pública
+            first_img = obj.imatges.filter(es_publica=True).first()
+            if first_img and first_img.imatge:
+                return first_img.imatge.url
+        except (ValueError, Exception):
+            pass
+        return ""
 
 
 class ItemDetailSchema(ModelSchema):
@@ -69,9 +73,21 @@ class ItemDetailSchema(ModelSchema):
 
 
 class ExpoSchema(ModelSchema):
+    imatge: str = ""
+
     class Meta:
         model = Expo
+        exclude = ['imatge']
         fields = '__all__'
+
+    @staticmethod
+    def resolve_imatge(obj):
+        try:
+            if obj.imatge:
+                return obj.imatge.url
+        except (ValueError, Exception):
+            pass
+        return ""
 
 
 class UpdateExpoSchema(Schema):
@@ -101,10 +117,21 @@ class UpdateItemSchema(Schema):
 
 class ExpoDetailSchema(ModelSchema):
     items: List[ItemSchema] = []
+    imatge: str = ""
 
     class Meta:
         model = Expo
+        exclude = ['imatge']
         fields = '__all__'
+
+    @staticmethod
+    def resolve_imatge(obj):
+        try:
+            if obj.imatge:
+                return obj.imatge.url
+        except Exception:
+            pass
+        return ""
 
 
 class IdentifyResponseSchema(Schema):
@@ -121,8 +148,8 @@ class SearchResultSchema(Schema):
     type: str
     lloc: Optional[str] = None
     data_inici: Optional[str] = None
-    data_fi: Optional[str] = None
-    imatge: Optional[str] = None
+    data_fi: Optional[str] = ""
+    imatge: str = ""
     expo_id: Optional[int] = None
 
 
@@ -175,14 +202,25 @@ def get_expo(request, expo_id: int):
 
 @api.put("/expos/{expo_id}", response=ExpoSchema, tags=["Exposicions"])
 def update_expo(request, expo_id: int, data: UpdateExpoSchema = Form(...), imatge: UploadedFile = File(None)):
-    expo = Expo.objects.get(pk=expo_id)
-    for attr, value in data.dict().items():
-        if value is not None:
-            setattr(expo, attr, value)
-    if imatge:
-        expo.imatge = imatge
-    expo.save()
-    return expo
+    try:
+        expo = Expo.objects.get(pk=expo_id)
+        for attr, value in data.dict().items():
+            if value is not None:
+                setattr(expo, attr, value)
+        if imatge:
+            expo.imatge = imatge
+        
+        # Save the expo
+        expo.save()
+        
+        # Refresh from DB to ensure all fields are correct
+        expo.refresh_from_db()
+        return expo
+    except Exception as e:
+        import traceback
+        print(f"ERROR in update_expo: {str(e)}")
+        print(traceback.format_exc())
+        raise HttpError(500, f"Error actualitzant expo: {str(e)}")
 
 
 @api.get("/search", response=List[SearchResultSchema], tags=["Búsqueda"])
@@ -329,6 +367,7 @@ def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatg
                 primera.save()
 
     if images_changed:
+        print(f"DEBUG: Imatges canviades per item {item.id}, marcant expo {item.expo.id} com ACTUALITZABLE")
         expo = item.expo
         if expo.estat != Expo.Estat.ACTUALITZABLE:
             expo.estat = Expo.Estat.ACTUALITZABLE
@@ -476,7 +515,7 @@ def list_intents(request, item_id: Optional[int] = None, encert: Optional[bool] 
 # ─── Endpoints: IA (marIA 2) ──────────────────────────────────────────────────
 
 @api.post("/identify", response=IdentifyResponseSchema, tags=["IA"])
-def identify_item(request, imatge: UploadedFile = File(...), cookie_id: str = None):
+def identify_item(request, imatge: UploadedFile = File(...), cookie_id: str = Form(None)):
     """
     Identifica un ítem a partir d'una foto mitjançant marIA 2 (Ollama).
     L'intent s'associa a l'usuari anònim identificat per la cookie.
@@ -501,17 +540,12 @@ def identify_item(request, imatge: UploadedFile = File(...), cookie_id: str = No
     intent = Intent.objects.create(imatge=imatge, usuari_anonim=usuari)
     success = process_intent(intent)
 
-    if success:
-        return {
-            "descripcio": intent.descripcio_ia,
-            "etiquetes": intent.etiquetes_ia,
-            "intent_id": intent.id,
-            "cookie_id": cookie_id
-        }
-    else:
-        return {
-            "descripcio": intent.descripcio_ia or "Error desconegut en la identificació.",
-            "etiquetes": ["error"],
-            "intent_id": intent.id,
-            "cookie_id": cookie_id
-        }
+    # Refrescar per llegir resultats de la IA dats per process_intent
+    intent.refresh_from_db()
+
+    return {
+        "descripcio": intent.descripcio_ia or "",
+        "etiquetes": intent.etiquetes_ia or [],
+        "intent_id": intent.id,
+        "cookie_id": cookie_id
+    }
