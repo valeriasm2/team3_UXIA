@@ -4,8 +4,10 @@ from ninja.errors import HttpError
 from typing import List, Optional
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.utils import timezone
+import uuid
 from rest_framework.authtoken.models import Token
-from .models import Expo, Item, Imatge, Etiqueta, Intent
+from .models import Expo, Item, Imatge, Etiqueta, Intent, UsuariAnonim
 from .ai_utils import process_intent
 
 api = NinjaAPI(title="UXIA API", version="2.0")
@@ -109,6 +111,7 @@ class IdentifyResponseSchema(Schema):
     descripcio: str
     etiquetes: List[str]
     intent_id: int
+    cookie_id: Optional[str] = None
 
 
 class SearchResultSchema(Schema):
@@ -121,6 +124,20 @@ class SearchResultSchema(Schema):
     data_fi: Optional[str] = None
     imatge: Optional[str] = None
     expo_id: Optional[int] = None
+
+
+# ─── Schemas d'Usuari Anònim ──────────────────────────────────────────────────
+
+class UsuariAnonimSchema(Schema):
+    id: int
+    cookie_id: str
+    data_creacio: str
+    ultima_activitat: str
+
+
+class IdentificarUsuariResponse(Schema):
+    cookie_id: str
+    es_nou: bool
 
 
 # ─── Endpoints: Auth ──────────────────────────────────────────────────────────
@@ -319,6 +336,7 @@ def update_item(request, item_id: int, data: UpdateItemSchema = Form(...), imatg
 
     return item
 
+
 @api.delete("/items/{item_id}", tags=["Ítems"])
 def delete_item(request, item_id: int):
     """Elimina un ítem sencer. L'expo associada passa a l'estat ACTUALITZABLE per recalcular si hi falten imatges... encara que es pot treure això."""
@@ -386,35 +404,114 @@ def list_etiquetes(request, pare_id: Optional[int] = None):
     return qs
 
 
+# ─── Endpoints: Usuari Anònim ─────────────────────────────────────────────────
+
+@api.post("/usuari/identificar", response=IdentificarUsuariResponse, tags=["Usuari"])
+def identificar_usuari(request, cookie_id: str = None):
+    """
+    Identifica o crea un usuari anònim a partir d'una cookie.
+    Si no existeix, el crea.
+    """
+    if cookie_id:
+        try:
+            usuari = UsuariAnonim.objects.get(cookie_id=cookie_id)
+            # Actualitzar última activitat
+            usuari.ultima_activitat = timezone.now()
+            usuari.save()
+            return {
+                "cookie_id": usuari.cookie_id,
+                "es_nou": False
+            }
+        except UsuariAnonim.DoesNotExist:
+            pass
+    
+    # Crear nou usuari
+    nou_cookie_id = str(uuid.uuid4())
+    usuari = UsuariAnonim.objects.create(cookie_id=nou_cookie_id)
+    
+    return {
+        "cookie_id": usuari.cookie_id,
+        "es_nou": True
+    }
+
+
+@api.get("/usuari/actual", response=UsuariAnonimSchema, tags=["Usuari"])
+def get_usuari_actual(request, cookie_id: str):
+    """Obté la informació de l'usuari actual a partir de la cookie"""
+    try:
+        usuari = UsuariAnonim.objects.get(cookie_id=cookie_id)
+        return {
+            "id": usuari.id,
+            "cookie_id": usuari.cookie_id,
+            "data_creacio": usuari.data_creacio.isoformat(),
+            "ultima_activitat": usuari.ultima_activitat.isoformat()
+        }
+    except UsuariAnonim.DoesNotExist:
+        return None
+
+
 # ─── Endpoints: Intents ───────────────────────────────────────────────────────
 
 @api.get("/intents", response=List[IntentSchema], tags=["Intents"])
-def list_intents(request, item_id: Optional[int] = None, encert: Optional[bool] = None):
+def list_intents(request, item_id: Optional[int] = None, encert: Optional[bool] = None, cookie_id: str = None):
+    """Llistar intents. Si es proporciona cookie_id, només els de l'usuari anònim."""
     qs = Intent.objects.all()
+    
+    # Filtrar per usuari anònim si s'especifica cookie_id
+    if cookie_id:
+        try:
+            usuari = UsuariAnonim.objects.get(cookie_id=cookie_id)
+            qs = qs.filter(usuari_anonim=usuari)
+        except UsuariAnonim.DoesNotExist:
+            return []
+    
     if item_id:
         qs = qs.filter(item_id=item_id)
     if encert is not None:
         qs = qs.filter(encert=encert)
+    
     return qs
 
 
 # ─── Endpoints: IA (marIA 2) ──────────────────────────────────────────────────
 
 @api.post("/identify", response=IdentifyResponseSchema, tags=["IA"])
-def identify_item(request, imatge: UploadedFile = File(...)):
-    """Identifica un ítem a partir d'una foto mitjançant marIA 2 (Ollama)."""
-    intent = Intent.objects.create(imatge=imatge)
+def identify_item(request, imatge: UploadedFile = File(...), cookie_id: str = None):
+    """
+    Identifica un ítem a partir d'una foto mitjançant marIA 2 (Ollama).
+    L'intent s'associa a l'usuari anònim identificat per la cookie.
+    """
+    # Obtenir o crear usuari anònim
+    usuari = None
+    if cookie_id:
+        try:
+            usuari = UsuariAnonim.objects.get(cookie_id=cookie_id)
+            usuari.ultima_activitat = timezone.now()
+            usuari.save()
+        except UsuariAnonim.DoesNotExist:
+            pass
+    
+    if not usuari:
+        # Crear nou usuari
+        nou_cookie_id = str(uuid.uuid4())
+        usuari = UsuariAnonim.objects.create(cookie_id=nou_cookie_id)
+        cookie_id = nou_cookie_id
+    
+    # Crear intent associat a l'usuari
+    intent = Intent.objects.create(imatge=imatge, usuari_anonim=usuari)
     success = process_intent(intent)
 
     if success:
         return {
             "descripcio": intent.descripcio_ia,
             "etiquetes": intent.etiquetes_ia,
-            "intent_id": intent.id
+            "intent_id": intent.id,
+            "cookie_id": cookie_id
         }
     else:
         return {
             "descripcio": intent.descripcio_ia or "Error desconegut en la identificació.",
             "etiquetes": ["error"],
-            "intent_id": intent.id
+            "intent_id": intent.id,
+            "cookie_id": cookie_id
         }

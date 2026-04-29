@@ -1,27 +1,36 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUserTracking } from "../hooks/useUserTracking";
 
 const Historial = () => {
   const [intents, setIntents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { userId, loading: userLoading } = useUserTracking();
 
   useEffect(() => {
-    cargarIntents();
-  }, []);
+    if (userId) {
+      cargarIntents();
+    }
+  }, [userId]);
 
   const cargarIntents = async () => {
+    if (!userId) return;
+    
     try {
       setLoading(true);
-      const response = await fetch("/api/intents");
+      // Filtrar intents por ckie
+      const response = await fetch(`/api/intents?cookie_id=${userId}`, {
+        credentials: "include",
+      });
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}`);
       }
       
       const data = await response.json();
-      console.log("Intents carregats:", data);
+      console.log("Intents carregats per usuari:", data);
       setIntents(data);
     } catch (err) {
       console.error("Error:", err);
@@ -43,7 +52,8 @@ const Historial = () => {
     });
   };
 
-  if (loading) {
+  // Mostrar loading 
+  if (userLoading || loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
@@ -58,7 +68,7 @@ const Historial = () => {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center text-red-500 p-6 bg-white rounded-lg shadow">
-          <p className="mb-4"> Error: {error}</p>
+          <p className="mb-4">❌ Error: {error}</p>
           <button 
             onClick={cargarIntents}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
@@ -80,7 +90,7 @@ const Historial = () => {
           >
             ←
           </button>
-          <h1 className="text-xl font-bold text-slate-800">Historial d'Intents</h1>
+          <h1 className="text-xl font-bold text-slate-800">📋 Historial d'Intents</h1>
         </div>
       </div>
 
@@ -90,7 +100,7 @@ const Historial = () => {
             <div className="text-6xl mb-4">📭</div>
             <p className="text-slate-600 font-medium">No hi ha intents per mostrar</p>
             <p className="text-slate-400 text-sm mt-2">
-          Fes una foto a un item per començar
+              Fes una foto a un item per començar
             </p>
           </div>
         ) : (
@@ -105,6 +115,11 @@ const Historial = () => {
                         src={intent.imatge}
                         alt="Intent"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '';
+                          e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-3xl text-gray-400">📸</div>';
+                        }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-3xl text-gray-400">
@@ -119,17 +134,17 @@ const Historial = () => {
                       <div>
                         {intent.encert === true && (
                           <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                             Encert
+                            ✅ Encert
                           </span>
                         )}
                         {intent.encert === false && (
                           <span className="inline-block px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
-                             Error
+                            ❌ Error
                           </span>
                         )}
                         {intent.encert === null && (
                           <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
-                             Pendent
+                            ⏳ Pendent
                           </span>
                         )}
                       </div>

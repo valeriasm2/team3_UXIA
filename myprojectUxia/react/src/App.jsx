@@ -4,6 +4,8 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import BackgroundDecoration from "./components/BackgroundDecoration";
 import ItemDetailModal from "./components/ItemDetailModal";
+import CookieBanner from "./components/CookieBanner";
+import { useUserTracking } from "./hooks/useUserTracking";
 import Landing from "./pages/Landing";
 import ExpoDetail from "./pages/ExpoDetail";
 import Historial from "./pages/Historial";
@@ -19,6 +21,7 @@ const Protected = ({ children }) =>
   sessionStorage.getItem("adminToken") ? children : <Navigate to="/admin" />;
 
 const MainApp = () => {
+  const { showCookieBanner, acceptCookies, rejectCookies } = useUserTracking();
   const [expos, setExpos] = useState([]);
   const [nav, setNav] = useState({ activeExpo: null, items: [], index: 0 });
   const [detail, setDetail] = useState({ item: null, images: [] });
@@ -109,6 +112,10 @@ const MainApp = () => {
           close={() => setDetail({ item: null, images: [] })}
           images={detail.images}
         />
+      )}
+      {/* Banner de cookies */}
+      {showCookieBanner && (
+        <CookieBanner onAccept={acceptCookies} onReject={rejectCookies} />
       )}
     </div>
   );
