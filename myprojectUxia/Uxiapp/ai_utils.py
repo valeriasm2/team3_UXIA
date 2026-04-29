@@ -57,7 +57,7 @@ def identify_image_data(image_bytes):
 
         client = ollama.Client(host=settings.OLLAMA_URL)
         response = client.chat(
-             model='qwen2.5vl:7b',
+             model='qwen3-vl:4b',
              messages=[{
                  'role': 'user',
                  'content': prompt,

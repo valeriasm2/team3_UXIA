@@ -9780,3 +9780,19 @@ response
   Error extracting attribute: OperationalError: (1054, "Unknown column 'Uxiapp_expo.propietari_id' in 'SELECT'") [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7ff0ffa0de40>>, input_type=DjangoGetter]
     For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
 ERROR 2026-04-29 13:40:20,921 log Internal Server Error: /api/expos
+ERROR 2026-04-29 13:53:41,288 errors 1 validation error for NinjaResponseSchema
+response.0.imatge
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_type
+Traceback (most recent call last):
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/ninja/operation.py", line 219, in run
+    return self._result_to_response(request, result, temporal_response)
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/ninja/operation.py", line 422, in _result_to_response
+    validated_object = response_model.model_validate(
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/pydantic/main.py", line 732, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+pydantic_core._pydantic_core.ValidationError: 1 validation error for NinjaResponseSchema
+response.0.imatge
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_type
+ERROR 2026-04-29 13:53:41,291 log Internal Server Error: /api/search
