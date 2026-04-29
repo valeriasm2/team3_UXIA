@@ -3,12 +3,8 @@ from django.core.management.base import BaseCommand
 from django.core.files import File
 from django.conf import settings
 from datetime import date
-<<<<<<< HEAD
-from Uxiapp.models import Expo, Item, Imatge, Etiqueta
-=======
 from django.contrib.auth.models import User
-from Uxiapp.models import Expo, Item, Imatge
->>>>>>> pre
+from Uxiapp.models import Expo, Item, Imatge, Etiqueta
 
 class Command(BaseCommand):
     help = 'Borra y regenera la Expo para actualizar nombres de imágenes'

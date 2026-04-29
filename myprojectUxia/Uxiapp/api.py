@@ -38,9 +38,21 @@ class ImatgeSchema(ModelSchema):
 
 
 class IntentSchema(ModelSchema):
+    imatge: str = ""
+
     class Meta:
         model = Intent
-        fields = ['id', 'imatge', 'item', 'encert', 'confiança', 'descripcio_ia', 'etiquetes_ia', 'creat_el']
+        exclude = ['imatge']
+        fields = '__all__'
+
+    @staticmethod
+    def resolve_imatge(obj):
+        try:
+            if obj.imatge:
+                return obj.imatge.url
+        except (ValueError, Exception):
+            pass
+        return ""
 
 
 class ItemSchema(ModelSchema):
@@ -240,7 +252,7 @@ def search_expos_and_items(request, q: str = ""):
             'lloc': expo.lloc,
             'data_inici': str(expo.data_inici),
             'data_fi': str(expo.data_fi),
-            'imatge': expo.imatge.url if expo.imatge else None,
+            'imatge': expo.imatge.url if expo.imatge else "",
         })
 
     for item in Item.objects.filter(nom__icontains=q):
@@ -250,7 +262,7 @@ def search_expos_and_items(request, q: str = ""):
             'nom': item.nom,
             'descripcio': item.descripcio,
             'type': 'item',
-            'imatge': first_img.imatge.url if first_img else None,
+            'imatge': first_img.imatge.url if (first_img and first_img.imatge) else "",
             'expo_id': item.expo_id,
         })
 

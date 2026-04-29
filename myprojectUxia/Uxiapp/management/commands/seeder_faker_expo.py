@@ -5,12 +5,8 @@ from django.core.files import File
 from django.conf import settings
 from datetime import date, timedelta
 from faker import Faker
-<<<<<<< HEAD
-from Uxiapp.models import Expo, Item, Imatge, Etiqueta
-=======
 from django.contrib.auth.models import User
-from Uxiapp.models import Expo, Item, Imatge
->>>>>>> pre
+from Uxiapp.models import Expo, Item, Imatge, Etiqueta
 
 class Command(BaseCommand):
     help = 'Genera Expos aleatorias con Faker y asigna imágenes aleatoriamente'
