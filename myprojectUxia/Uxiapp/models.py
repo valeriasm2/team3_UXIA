@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 # ─── Utilitats d'upload ────────────────────────────────────────────────────────
@@ -56,6 +57,30 @@ class Etiqueta(models.Model):
         return self.nom
 
 
+# ─── Usuari Anònim ─────────────────────────────────────────────────────────────
+
+class UsuariAnonim(models.Model):
+    """
+    Usuari anònim identificat per una cookie única.
+    """
+    cookie_id = models.CharField(
+        max_length=100, 
+        unique=True, 
+        verbose_name="ID de cookie"
+    )
+    data_creacio = models.DateTimeField(auto_now_add=True, verbose_name="Data creació")
+    ultima_activitat = models.DateTimeField(auto_now=True, verbose_name="Última activitat")
+    
+    class Meta:
+        verbose_name = "Usuari anònim"
+        verbose_name_plural = "Usuaris anònims"
+        ordering = ['-ultima_activitat']
+
+    def __str__(self):
+        return f"Usuari {self.cookie_id[:20]}..."
+
+
+
 # ─── Expo ─────────────────────────────────────────────────────────────────────
 
 class Expo(models.Model):
@@ -74,6 +99,14 @@ class Expo(models.Model):
     lloc = models.CharField(max_length=100, verbose_name="Lloc")
     descripcio = models.TextField(verbose_name="Descripció")
     imatge = models.ImageField(upload_to=expo_upload, verbose_name="Imatge")
+    propietari = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='expos',
+        verbose_name="Propietari",
+        null=True,
+        blank=True
+    )
 
     estat = models.CharField(
         max_length=20,
@@ -166,6 +199,15 @@ class Intent(models.Model):
         null=True,
         blank=True,
         verbose_name="Ítem identificat"
+    )
+    # NUEVO: Asociar el intent a un usuario anónimo
+    usuari_anonim = models.ForeignKey(
+        UsuariAnonim,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='intents',
+        verbose_name="Usuari anònim"
     )
     encert = models.BooleanField(
         null=True,

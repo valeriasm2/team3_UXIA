@@ -17,13 +17,19 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from Uxiapp.api import api    
+from Uxiapp.api import api
 from django.conf import settings
-from django.conf.urls.static import static      
+from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Django Admin (panel d'administració de Django natiu)
+    path('django-admin/', admin.site.urls),
+
+    # API UXIA (inclou endpoints per al UXIA Admin Frontend en React)
+    # Inclou: /api/auth/login, /api/expos, /api/items, etc.
+    # El frontend React de UXIA Admin utilitza aquests endpoints
     path("api/", api.urls),
+
 ]
 
 if settings.DEBUG:

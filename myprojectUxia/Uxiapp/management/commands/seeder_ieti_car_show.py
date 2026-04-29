@@ -3,7 +3,12 @@ from django.core.management.base import BaseCommand
 from django.core.files import File
 from django.conf import settings
 from datetime import date
+<<<<<<< HEAD
 from Uxiapp.models import Expo, Item, Imatge, Etiqueta
+=======
+from django.contrib.auth.models import User
+from Uxiapp.models import Expo, Item, Imatge
+>>>>>>> pre
 
 class Command(BaseCommand):
     help = 'Borra y regenera la Expo para actualizar nombres de imágenes'
@@ -13,6 +18,12 @@ class Command(BaseCommand):
         # Al borrar la Expo, el CASCADE borra Items e Imatges automáticamente.
         self.stdout.write(self.style.WARNING('Borrando Expo "IETI CAR SHOW" y sus Items e Imatges...'))
         Expo.objects.filter(nom="IETI CAR SHOW").delete()
+
+        # Obtener o crear usuario admin por defecto
+        admin_user, _ = User.objects.get_or_create(
+            username='admin',
+            defaults={'email': 'admin@uxia.local', 'is_staff': True, 'is_superuser': True}
+        )
 
         ruta_base = os.path.join(settings.BASE_DIR, 'temp_fotos')
 
@@ -24,6 +35,7 @@ class Command(BaseCommand):
             lloc="Campus IETI",
             descripcio="Colección actualizada con nuevos nombres de archivo.",
             estat=Expo.Estat.DISPONIBLE,
+            propietari=admin_user,
         )
 
         if not os.path.exists(ruta_base):

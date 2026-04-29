@@ -10,48 +10,48 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import environ
 from pathlib import Path
 import os
-import environ
- 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Initialize environ
 env = environ.Env(
-    DEBUG=(bool, False)
+    DJANGO_DEBUG=(bool, False),
+    #OLLAMA_URL=(str, 'http://localhost:11434'),
+    OLLAMA_URL=(str, 'http://192.168.1.24:11434'),
 )
-
-# Podeu deixar les instruccions que hi hagi de l'esquelet de Django
+# Reading .env file
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
- 
-# variables a llegir de .env
-DEBUG = env('DEBUG')
-SECRET_KEY = env('SECRET_KEY')
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*",])
-DATABASES = {
-    # configura a travÃ©s de la variable DATABASE_URL
-    'default': env.db(),
-}
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS",default=[
-    "http://localhost:5173",    # Exemple: React en desenvolupament amb Vite o CRA
-    "http://127.0.0.1:5173",
-])
 
-OLLAMA_URL = env("OLLAMA_URL", default="http://localhost:11434")
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-y3)mn^hlu@a-^nklw_i2wb%=vlmsjet%r8fgqjhfra()wh=5*e')
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = env('DJANGO_DEBUG', default=env('DEBUG', default=False))
+if isinstance(DEBUG, str):
+    DEBUG = DEBUG.lower() == 'on' or DEBUG.lower() == 'true'
+
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['uxiaweb3.ieti.site', 'localhost', '127.0.0.1', '.ieti.site'])
+
 # Application definition
-
 INSTALLED_APPS = [
-    'corsheaders',
-    'Uxiapp.apps.UxiappConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
+    'Uxiapp',
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
+    'ninja.compatibility.files.fix_request_files_middleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -81,23 +81,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'myprojectUxia.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Base de dades configurada via DATABASE_URL en .env (o per defecte si no es defineix)
-# Si es descuenta la part de sota, s'usarà SQLite explicitament.
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
+OLLAMA_URL = env('OLLAMA_URL', default='http://localhost:11434')
+
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -113,28 +116,89 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Media files (para imágenes)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(",")
+
+# CORS settings
+CORS_ALLOWED_ORIGINS = [
+    'http://uxiaweb3.ieti.site',
+    'https://uxiaweb3.ieti.site',
+    'http://localhost:5173',  # Només per desenvolupament local
+    'http://127.0.0.1:5173',
+]
+CORS_ALLOW_CREDENTIALS = True
+
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    'http://uxiaweb3.ieti.site',
+    'https://uxiaweb3.ieti.site',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+]
+
+# Security settings for production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = False  # Canviar a True quan tinguis HTTPS
+    SESSION_COOKIE_SECURE = False  # Canviar a True quan tinguis HTTPS
+    CSRF_COOKIE_SECURE = False  # Canviar a True quan tinguis HTTPS
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+
+# Ollama URL
+OLLAMA_URL = os.environ.get('OLLAMA_URL', 'http://localhost:11434')
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'Uxiapp': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
