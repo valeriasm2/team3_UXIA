@@ -8,17 +8,63 @@ from faker import Faker
 from django.contrib.auth.models import User
 from Uxiapp.models import Expo, Item, Imatge, Etiqueta
 
+RUTA_FOTOS = os.path.join(settings.BASE_DIR, 'fotos_faker')
+EXCLOURE = set()
+
+
+def carpetes_cotxes():
+    """Retorna llista de (nom_carpeta, nom_item, marca, model) per cada carpeta de cotxe."""
+    resultat = []
+    if not os.path.exists(RUTA_FOTOS):
+        return resultat
+    for carpeta in sorted(os.listdir(RUTA_FOTOS)):
+        if carpeta in EXCLOURE:
+            continue
+        ruta = os.path.join(RUTA_FOTOS, carpeta)
+        if not os.path.isdir(ruta):
+            continue
+        parts = carpeta.split('-')
+        nom_item = ' '.join(parts)
+        marca = parts[0] if parts else carpeta
+        model = ' '.join(parts[1:]) if len(parts) > 1 else carpeta
+        resultat.append((carpeta, nom_item, marca, model))
+    return resultat
+
+
+def fotos_de_carpeta(nom_carpeta):
+    """Retorna llista de rutes d'imatge dins una carpeta de cotxe."""
+    ruta = os.path.join(RUTA_FOTOS, nom_carpeta)
+    extensions = ('.jpg', '.jpeg', '.png', '.webp')
+    return [
+        os.path.join(ruta, f)
+        for f in os.listdir(ruta)
+        if f.lower().endswith(extensions)
+    ]
+
+
 class Command(BaseCommand):
-    help = 'Genera Expos aleatorias con Faker y asigna imágenes aleatoriamente'
+    help = 'Genera Expos amb els cotxes de temp_fotos assignant les fotos correctes a cada ítem'
 
     def add_arguments(self, parser):
-        parser.add_argument('--count', type=int, default=1, help='Número de expos a generar')
+        parser.add_argument('--count', type=int, default=1, help='Número d\'expos a generar')
+        parser.add_argument('--max-fotos', type=int, default=4, help='Màxim de fotos per ítem')
 
     def handle(self, *args, **options):
         count = options['count']
+        max_fotos = options['max_fotos']
         fake = Faker(['es_ES'])
-        
-        # Obtener todos los usuarios disponibles
+
+        cotxes = carpetes_cotxes()
+        if not cotxes:
+            self.stdout.write(self.style.ERROR(
+                f'No s\'han trobat carpetes de cotxes a {RUTA_FOTOS}'
+            ))
+            return
+
+        self.stdout.write(self.style.SUCCESS(
+            f'Cotxes disponibles: {[c[1] for c in cotxes]}'
+        ))
+
         usuarios = list(User.objects.all())
         if not usuarios:
             admin_user, _ = User.objects.get_or_create(
@@ -27,21 +73,18 @@ class Command(BaseCommand):
             )
             usuarios = [admin_user]
 
-        for _ in range(count):
-            # 1. GENERAR NOMBRE DE EXPO ALEATORIO
+        for n in range(count):
             ciudad = fake.city()
-            tipos_evento = ["Car Show", "Expo Automóvil", "Salón del Automóvil", "Mega Car Fest", "Auto Expo"]
-            tipo = random.choice(tipos_evento)
-            nombre_expo = f"{ciudad} {tipo}"
-            
-            self.stdout.write(self.style.SUCCESS(f'Creando Expo: {nombre_expo}'))
-            
-            # 2. CREAR EXPO
+            tipus = random.choice(["Car Show", "Expo Automóvil", "Salón del Automóvil", "Mega Car Fest", "Auto Expo"])
+            nom_expo = f"{ciudad} {tipus}"
+
+            self.stdout.write(self.style.SUCCESS(f'\nCreant Expo [{n+1}/{count}]: {nom_expo}'))
+
             fecha_inicio = date.today() + timedelta(days=random.randint(1, 30))
             fecha_fin = fecha_inicio + timedelta(days=random.randint(5, 15))
-            
+
             expo = Expo.objects.create(
-                nom=nombre_expo,
+                nom=nom_expo,
                 data_inici=fecha_inicio,
                 data_fi=fecha_fin,
                 lloc=f"Recinto {fake.street_name()}, {ciudad}",
@@ -49,74 +92,53 @@ class Command(BaseCommand):
                 estat=Expo.Estat.DISPONIBLE,
                 propietari=random.choice(usuarios),
             )
-            
-            # 3. OBTENER CATÁLOGO DE IMÁGENES DE RANDOM_FOTOS
-            ruta_base = os.path.join(settings.BASE_DIR, 'temp_fotos')
-            ruta_random = os.path.join(ruta_base, 'random_fotos')
-            catalogo_fotos = []
-            
-            if os.path.exists(ruta_random):
-                fotos = [f for f in os.listdir(ruta_random) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
-                for foto in fotos:
-                    catalogo_fotos.append(('random_fotos', foto))
-            
-            if not catalogo_fotos:
-                self.stdout.write(self.style.ERROR('No se encontraron imágenes en temp_fotos'))
-                continue
-            
-            # 4. GENERAR ITEMS CON NOMBRES DE COCHES REALISTAS
-            marcas = ["Volkswagen", "Ford", "Seat", "Opel", "Chevrolet", "Tesla", "BMW", "Mercedes", "Audi", "Toyota", "Honda", "Hyundai", "Kia"]
-            modelos = ["Sedán", "Coup", "SUV", "Hatchback", "Familiar", "Crossover", "Convertible", "Monovolumen"]
-            años = [2020, 2021, 2022, 2023, 2024, 2025]
-            
-            num_items = random.randint(12, 18)
-            
-            for i in range(num_items):
-                marca = random.choice(marcas)
-                modelo = random.choice(modelos)
-                año = random.choice(años)
-                
-                nombre_item = f"{marca} {modelo} {año}"
-                
+
+            # Si hi ha més cotxes que necessitem, fem una selecció aleatòria
+            seleccio = random.sample(cotxes, min(len(cotxes), random.randint(len(cotxes), len(cotxes))))
+
+            expo_imatge_posada = False
+
+            for nom_carpeta, nom_item, marca, model in seleccio:
+                fotos = fotos_de_carpeta(nom_carpeta)
+                if not fotos:
+                    self.stdout.write(self.style.WARNING(f'  Sense fotos: {nom_carpeta}'))
+                    continue
+
                 item = Item.objects.create(
-                    nom=nombre_item,
+                    nom=nom_item,
                     expo=expo,
-                    descripcio=f"{nombre_item} - {fake.sentence(nb_words=8)}"
+                    descripcio=f"{nom_item} - {fake.sentence(nb_words=8)}"
                 )
-                
-                # Generar y asignar Etiquetas
+
+                # Etiquetes
                 etiqueta_marca, _ = Etiqueta.objects.get_or_create(nom="Marques")
                 etiqueta_tipus, _ = Etiqueta.objects.get_or_create(nom="Tipus de Vehicle")
                 tag_marca, _ = Etiqueta.objects.get_or_create(nom=marca, pare=etiqueta_marca)
-                tag_tipus, _ = Etiqueta.objects.get_or_create(nom=modelo, pare=etiqueta_tipus)
-                
-                item.etiquetes.add(tag_marca)
-                item.etiquetes.add(tag_tipus)
-                
-                # Asignar 2-4 imágenes aleatorias al item
-                num_imagenes = random.randint(2, 4)
-                fotos_seleccionadas = random.sample(catalogo_fotos, min(num_imagenes, len(catalogo_fotos)))
-                
-                es_primera = True
-                for nombre_carpeta, nombre_foto in fotos_seleccionadas:
-                    ruta_foto = os.path.join(ruta_base, nombre_carpeta, nombre_foto)
-                    
+                tag_model, _ = Etiqueta.objects.get_or_create(nom=model, pare=etiqueta_tipus)
+                item.etiquetes.add(tag_marca, tag_model)
+
+                # Assignar fotos (totes o fins a max_fotos)
+                fotos_seleccionades = random.sample(fotos, min(max_fotos, len(fotos)))
+
+                for idx, ruta_foto in enumerate(fotos_seleccionades):
                     try:
                         with open(ruta_foto, 'rb') as f:
-                            nueva_img = Imatge(item=item, es_destacada=es_primera)
-                            nueva_img.imatge.save(nombre_foto, File(f), save=True)
-                            es_primera = False
+                            nova_img = Imatge(item=item, es_destacada=(idx == 0), es_publica=True, ordre=idx)
+                            nova_img.imatge.save(os.path.basename(ruta_foto), File(f), save=True)
                     except Exception as e:
-                        self.stdout.write(self.style.WARNING(f'Error al guardar {nombre_foto}: {e}'))
-                
-                # Asignar imagen de portada a la Expo si no la tiene
-                if not expo.imatge and fotos_seleccionadas:
-                    nombre_carpeta, nombre_foto = fotos_seleccionadas[0]
-                    ruta_foto = os.path.join(ruta_base, nombre_carpeta, nombre_foto)
+                        self.stdout.write(self.style.WARNING(f'  Error foto {ruta_foto}: {e}'))
+
+                # Primera foto del primer cotxe com a portada de l'expo
+                if not expo_imatge_posada and fotos_seleccionades:
                     try:
-                        with open(ruta_foto, 'rb') as f:
-                            expo.imatge.save(nombre_foto, File(f), save=True)
+                        with open(fotos_seleccionades[0], 'rb') as f:
+                            expo.imatge.save(os.path.basename(fotos_seleccionades[0]), File(f), save=True)
+                        expo_imatge_posada = True
                     except Exception as e:
-                        self.stdout.write(self.style.WARNING(f'Error al guardar imagen de Expo: {e}'))
-            
-            self.stdout.write(self.style.SUCCESS(f'¡Hecho! Expo "{nombre_expo}" creada con {num_items} items.'))
+                        self.stdout.write(self.style.WARNING(f'  Error portada expo: {e}'))
+
+                self.stdout.write(f'  + {nom_item} ({len(fotos_seleccionades)} fotos)')
+
+            self.stdout.write(self.style.SUCCESS(
+                f'Expo "{nom_expo}" creada amb {len(seleccio)} items.'
+            ))

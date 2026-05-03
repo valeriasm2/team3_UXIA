@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import BtnEntrenarIA from "../components/BtnENtrenarIA";
 
 const AdminExpoDetail = () => {
   const { id } = useParams();
@@ -19,7 +20,7 @@ const AdminExpoDetail = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const expoResponse = await fetch(`/api/expos/${id}`);
 
       if (!expoResponse.ok) {
@@ -40,10 +41,10 @@ const AdminExpoDetail = () => {
         itemsData.map(async (item) => {
           const imagenesResponse = await fetch(`/api/imatges?item_id=${item.id}&nomes_publiques=true`);
           const imagenes = await imagenesResponse.json();
-          
+
           const destacada = imagenes.find(img => img.es_destacada === true) || imagenes[0];
           const otrasImagenes = (destacada ? imagenes.filter(img => img.id !== destacada.id) : imagenes).slice(0, 4);
-          
+
           return {
             ...item,
             imagenes: imagenes,
@@ -52,7 +53,7 @@ const AdminExpoDetail = () => {
           };
         })
       );
-      
+
       setExpo(expoData);
       setItems(itemsConImagenes);
     } catch (err) {
@@ -64,7 +65,7 @@ const AdminExpoDetail = () => {
   };
 
   const getEstatColor = (estat) => {
-    switch(estat) {
+    switch (estat) {
       case 'DISPONIBLE': return 'bg-green-100 text-green-800';
       case 'ACTUALITZABLE': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -72,7 +73,7 @@ const AdminExpoDetail = () => {
   };
 
   const getEstatText = (estat) => {
-    switch(estat) {
+    switch (estat) {
       case 'DISPONIBLE': return 'Disponible';
       case 'ACTUALITZABLE': return 'Actualitzable';
       default: return 'Inici';
@@ -95,7 +96,7 @@ const AdminExpoDetail = () => {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-500 mb-4">Error: {error}</p>
-          <button 
+          <button
             onClick={cargarExpoYItems}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg"
           >
@@ -124,7 +125,7 @@ const AdminExpoDetail = () => {
           >
             ← Tornar al Dashboard
           </button>
-          
+
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
@@ -143,10 +144,15 @@ const AdminExpoDetail = () => {
                 {expo.descripcio}
               </p>
             </div>
-            <div className="text-right">
+            <div className="flex flex-col items-end gap-3">
               <div className="text-2xl font-bold text-gray-900">
                 {items.length} {items.length === 1 ? "Item" : "Items"}
               </div>
+              <BtnEntrenarIA
+                expoId={id}
+                initialTrainStatus={expo.train_status || "IDLE"}
+                onTrainOk={cargarExpoYItems}
+              />
             </div>
           </div>
         </div>
@@ -176,7 +182,7 @@ const AdminExpoDetail = () => {
                       📷
                     </div>
                   )}
-                  
+
                   <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
                     📸 {item.imagenes?.length || 0}
                   </div>
@@ -186,7 +192,7 @@ const AdminExpoDetail = () => {
                   <h3 className="font-bold text-lg text-gray-900 mb-1 truncate">
                     {item.nom}
                   </h3>
-                  
+
                   <p className="text-sm text-gray-600 line-clamp-2 mb-3">
                     {item.descripcio || "Sense descripció"}
                   </p>

@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUserTracking } from "../hooks/useUserTracking";
+
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+};
 
 const Historial = () => {
   const [intents, setIntents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const { userId, loading: userLoading } = useUserTracking();
+  const userId = getCookie('uxia_user_id');
+  const userLoading = false;
 
   useEffect(() => {
     if (userId) {

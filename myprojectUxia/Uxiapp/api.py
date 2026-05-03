@@ -5,7 +5,9 @@ from typing import List, Optional
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.conf import settings
 import uuid
+import requests as http_requests
 from rest_framework.authtoken.models import Token
 from .models import Expo, Item, Imatge, Etiqueta, Intent, UsuariAnonim
 from .ai_utils import process_intent
@@ -561,3 +563,153 @@ def identify_item(request, imatge: UploadedFile = File(...), cookie_id: str = Fo
         "intent_id": intent.id,
         "cookie_id": cookie_id
     }
+
+
+# ─── Helpers IA Classificació ─────────────────────────────────────────────────
+
+def _ia_login():
+    """Fa login al servei IA i retorna el token Bearer."""
+    ia_url = settings.IA_URL
+    resp = http_requests.post(
+        f"{ia_url}/auth/login",
+        json={"username": settings.IA_USERNAME, "password": settings.IA_PASSWORD, "device": "django"},
+        timeout=10,
+    )
+    if not resp.ok:
+        raise HttpError(502, f"Error login IA: {resp.text}")
+    data = resp.json()
+    token = data.get("token") or data.get("access_token") or data.get("access") or ""
+    if not token:
+        raise HttpError(502, "El servei IA no ha retornat cap token")
+    return token
+
+
+# ─── Schemas IA ──────────────────────────────────────────────────────────────
+
+class TrainStatusSchema(Schema):
+    train_status: str
+    ia_status: Optional[str] = None
+    eta: Optional[str] = None
+    accuracy: Optional[str] = None
+    global_percentage: Optional[str] = None
+    queue_position: Optional[int] = None
+    message: Optional[str] = None
+
+
+# ─── Endpoints: Entrenament IA ────────────────────────────────────────────────
+
+@api.post("/expos/{expo_id}/entrenar", response=TrainStatusSchema, tags=["IA"])
+def entrenar_expo(request, expo_id: int):
+    """
+    Inicia l'entrenament de la IA amb les imatges de l'expo.
+    Passos: login → esborra dataset → puja imatges → llança entrenament.
+    """
+    expo = Expo.objects.prefetch_related('items__imatges').get(pk=expo_id)
+
+    ia_url = settings.IA_URL
+    token = _ia_login()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Esborra el dataset existent
+    http_requests.delete(f"{ia_url}/dataset/default", headers=headers, timeout=10)
+
+    # Puja totes les imatges públiques amb la seva etiqueta (nom de l'ítem)
+    files = []
+    data = []
+    for item in expo.items.all():
+        label = item.nom.replace(" ", "-")
+        for imatge in item.imatges.filter(es_publica=True):
+            try:
+                img_file = imatge.imatge.open('rb')
+                files.append(('files', (imatge.imatge.name.split('/')[-1], img_file, 'image/jpeg')))
+                data.append(('labels', label))
+            except Exception:
+                pass
+
+    if not files:
+        raise HttpError(400, "L'expo no té imatges per entrenar")
+
+    upload_resp = http_requests.post(
+        f"{ia_url}/dataset/images",
+        headers=headers,
+        files=files,
+        data=data,
+        timeout=60,
+    )
+    for _, (_, f, _) in files:
+        try:
+            f.close()
+        except Exception:
+            pass
+
+    if not upload_resp.ok:
+        expo.train_status = Expo.TrainStatus.ERROR
+        expo.save()
+        raise HttpError(502, f"Error pujant imatges: {upload_resp.text}")
+
+    # Llança l'entrenament
+    train_resp = http_requests.get(f"{ia_url}/train", headers=headers, timeout=10)
+
+    if not train_resp.ok:
+        expo.train_status = Expo.TrainStatus.ERROR
+        expo.save()
+        raise HttpError(502, f"Error iniciant entrenament: {train_resp.text}")
+
+    train_data = train_resp.json()
+    ia_status = train_data.get("status", "RUNNING")
+    expo.train_status = ia_status if ia_status in Expo.TrainStatus.values else Expo.TrainStatus.RUNNING
+    expo.save()
+
+    return {
+        "train_status": expo.train_status,
+        "ia_status": ia_status,
+        "eta": train_data.get("eta"),
+        "accuracy": train_data.get("accuracy"),
+        "global_percentage": train_data.get("global_percentage"),
+        "queue_position": train_data.get("queue_position"),
+        "message": train_data.get("message", ""),
+    }
+
+
+@api.get("/expos/{expo_id}/train-status", response=TrainStatusSchema, tags=["IA"])
+def get_train_status(request, expo_id: int):
+    """
+    Comprova l'estat actual de l'entrenament.
+    Si arriba a OK, l'expo passa a DISPONIBLE.
+    """
+    expo = Expo.objects.get(pk=expo_id)
+
+    if expo.train_status == Expo.TrainStatus.IDLE:
+        return {"train_status": Expo.TrainStatus.IDLE}
+
+    ia_url = settings.IA_URL
+    try:
+        token = _ia_login()
+        headers = {"Authorization": f"Bearer {token}"}
+        check_resp = http_requests.get(f"{ia_url}/train/check", headers=headers, timeout=10)
+        if not check_resp.ok:
+            return {"train_status": expo.train_status, "message": "No s'ha pogut connectar al servei IA"}
+
+        check_data = check_resp.json()
+        ia_status = check_data.get("status", expo.train_status)
+
+        expo.train_status = ia_status if ia_status in Expo.TrainStatus.values else expo.train_status
+
+        if ia_status == Expo.TrainStatus.OK:
+            expo.estat = Expo.Estat.DISPONIBLE
+
+        expo.save()
+
+        return {
+            "train_status": expo.train_status,
+            "ia_status": ia_status,
+            "eta": check_data.get("eta"),
+            "accuracy": check_data.get("accuracy"),
+            "global_percentage": check_data.get("global_percentage"),
+            "queue_position": check_data.get("queue_position"),
+            "message": check_data.get("message", ""),
+        }
+    except HttpError:
+        raise
+    except Exception as e:
+        return {"train_status": expo.train_status, "message": str(e)}

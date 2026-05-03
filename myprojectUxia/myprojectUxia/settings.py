@@ -162,6 +162,11 @@ if not DEBUG:
 # Ollama URL
 OLLAMA_URL = os.environ.get('OLLAMA_URL', 'http://localhost:11434')
 
+# Servei IA classificació d'imatges
+IA_URL = os.environ.get('IA_URL', 'http://192.168.56.10:8765')
+IA_USERNAME = os.environ.get('IA_USERNAME', '')
+IA_PASSWORD = os.environ.get('IA_PASSWORD', '')
+
 # Logging configuration
 LOGGING = {
     'version': 1,

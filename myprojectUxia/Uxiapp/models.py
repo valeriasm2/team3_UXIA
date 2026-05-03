@@ -93,6 +93,15 @@ class Expo(models.Model):
         DISPONIBLE = 'DISPONIBLE', 'Disponible'
         ACTUALITZABLE = 'ACTUALITZABLE', 'Actualitzable'
 
+    class TrainStatus(models.TextChoices):
+        IDLE = 'IDLE', 'Inactiu'
+        QUEUED = 'QUEUED', 'En cua'
+        RUNNING = 'RUNNING', 'Entrenant'
+        OK = 'OK', 'Completat'
+        ERROR = 'ERROR', 'Error'
+        CANCELLED = 'CANCELLED', "Cancel·lat"
+        REPLACE = 'REPLACE', 'Reemplaçant'
+
     nom = models.CharField(max_length=100, verbose_name="Nom")
     data_inici = models.DateField(verbose_name="Data d'inici")
     data_fi = models.DateField(verbose_name="Data de fi")
@@ -113,6 +122,12 @@ class Expo(models.Model):
         choices=Estat.choices,
         default=Estat.INIT,
         verbose_name="Estat"
+    )
+    train_status = models.CharField(
+        max_length=20,
+        choices=TrainStatus.choices,
+        default=TrainStatus.IDLE,
+        verbose_name="Estat entrenament IA"
     )
     creat_el = models.DateTimeField(auto_now_add=True)
     actualitzat_el = models.DateTimeField(auto_now=True)

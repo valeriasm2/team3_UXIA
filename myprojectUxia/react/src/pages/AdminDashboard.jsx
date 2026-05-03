@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import NouItemModal from "../components/NouItemModal";
 import EditExpoModal from "../components/EditExpoModal";
 import EditItemModal from "../components/EditItemModal";
+import BtnEntrenarIA from "../components/BtnENtrenarIA";
 import { useDark } from "../App";
 
 const Pencil = () => (
@@ -425,12 +426,23 @@ const AdminDashboard = () => {
                   {view.estat}
                 </span>
               </div>
-              <button
-                onClick={() => setNouItemExpo(view)}
-                className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
-              >
-                + NOU ITEM
-              </button>
+              <div className="flex flex-col items-end gap-2">
+                <button
+                  onClick={() => setNouItemExpo(view)}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+                >
+                  + NOU ITEM
+                </button>
+                <BtnEntrenarIA
+                  expoId={view.id}
+                  initialTrainStatus={view.train_status || "IDLE"}
+                  onTrainOk={() => {
+                    showToast("Entrenament completat! L'expo passa a DISPONIBLE.");
+                    if (user) fetchExpos(user);
+                    setView((v) => ({ ...v, estat: "DISPONIBLE", train_status: "OK" }));
+                  }}
+                />
+              </div>
             </div>
 
             {adminItems.length > 0 ? (
