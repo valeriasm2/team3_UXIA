@@ -613,42 +613,62 @@ def entrenar_expo(request, expo_id: int):
     # Esborra el dataset existent
     http_requests.delete(f"{ia_url}/dataset/default", headers=headers, timeout=10)
 
-    # Puja totes les imatges públiques amb la seva etiqueta (nom de l'ítem)
+    # Puja totes les imatges en un sol batch amb noms de fitxer únics
+    # Salta ítems amb menys de 2 imatges (requisit mínim de la IA)
     files = []
-    data = []
+    form_data = []
+    file_handles = []
     for item in expo.items.all():
+        if item.imatges.filter(es_publica=True).count() < 2:
+            continue
         label = item.nom.replace(" ", "-")
         for imatge in item.imatges.filter(es_publica=True):
             try:
-                img_file = imatge.imatge.open('rb')
-                files.append(('files', (imatge.imatge.name.split('/')[-1], img_file, 'image/jpeg')))
-                data.append(('labels', label))
+                fh = imatge.imatge.open('rb')
+                file_handles.append(fh)
+                filename = f"{imatge.id}_{imatge.imatge.name.split('/')[-1]}"
+                files.append(('files', (filename, fh, 'image/jpeg')))
+                form_data.append(('labels', label))
             except Exception:
                 pass
 
     if not files:
-        raise HttpError(400, "L'expo no té imatges per entrenar")
+        expo.train_status = Expo.TrainStatus.ERROR
+        expo.save()
+        raise HttpError(400, "L'expo no té imatges per entrenar (mínim 2 per ítem)")
 
-    upload_resp = http_requests.post(
-        f"{ia_url}/dataset/images",
-        headers=headers,
-        files=files,
-        data=data,
-        timeout=60,
-    )
-    for _, (_, f, _) in files:
-        try:
-            f.close()
-        except Exception:
-            pass
+    try:
+        upload_resp = http_requests.post(
+            f"{ia_url}/dataset/images",
+            headers=headers,
+            files=files,
+            data=form_data,
+            timeout=120,
+        )
+    finally:
+        for fh in file_handles:
+            try:
+                fh.close()
+            except Exception:
+                pass
 
     if not upload_resp.ok:
         expo.train_status = Expo.TrainStatus.ERROR
         expo.save()
         raise HttpError(502, f"Error pujant imatges: {upload_resp.text}")
 
+    # Comprova que el dataset és entrenable
+    runtime_resp = http_requests.get(f"{ia_url}/runtime", headers=headers, timeout=10)
+    if runtime_resp.ok:
+        runtime_data = runtime_resp.json()
+        if not runtime_data.get("is_trainable", True):
+            errors = runtime_data.get("trainable_errors", [])
+            expo.train_status = Expo.TrainStatus.ERROR
+            expo.save()
+            raise HttpError(400, f"Dataset no entrenable: {'; '.join(errors)}")
+
     # Llança l'entrenament
-    train_resp = http_requests.get(f"{ia_url}/train", headers=headers, timeout=10)
+    train_resp = http_requests.post(f"{ia_url}/train", headers=headers, timeout=10)
 
     if not train_resp.ok:
         expo.train_status = Expo.TrainStatus.ERROR
