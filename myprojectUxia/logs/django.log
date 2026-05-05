@@ -17649,3 +17649,5 @@ ERROR 2026-05-04 16:21:09,733 log Bad Gateway: /api/expos/8/entrenar
 ERROR 2026-05-04 16:21:09,734 basehttp "POST /api/expos/8/entrenar HTTP/1.1" 502 133
 ERROR 2026-05-04 16:35:11,120 log Bad Gateway: /api/expos/8/entrenar
 ERROR 2026-05-04 16:35:11,121 basehttp "POST /api/expos/8/entrenar HTTP/1.1" 502 133
+ERROR 2026-05-05 13:52:35,177 log Bad Gateway: /api/expos/1/entrenar
+ERROR 2026-05-05 13:52:35,177 basehttp "POST /api/expos/1/entrenar HTTP/1.1" 502 126

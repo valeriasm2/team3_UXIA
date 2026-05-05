@@ -596,6 +596,16 @@ class TrainStatusSchema(Schema):
     message: Optional[str] = None
 
 
+class ClassifyItemSchema(Schema):
+    trobat: bool
+    prediction: Optional[str] = None
+    item_id: Optional[int] = None
+    nom: Optional[str] = None
+    descripcio: Optional[str] = None
+    imatge: Optional[str] = None
+    model_version: Optional[int] = None
+
+
 # ─── Endpoints: Entrenament IA ────────────────────────────────────────────────
 
 @api.post("/expos/{expo_id}/entrenar", response=TrainStatusSchema, tags=["IA"])
@@ -733,3 +743,70 @@ def get_train_status(request, expo_id: int):
         raise
     except Exception as e:
         return {"train_status": expo.train_status, "message": str(e)}
+
+
+# ─── Endpoints: Classificació IA ─────────────────────────────────────────────
+
+def _normalize_label(text: str) -> str:
+    """Normalitza un nom per comparar-lo amb el label de la IA."""
+    import unicodedata
+    nfkd = unicodedata.normalize('NFKD', text)
+    ascii_text = nfkd.encode('ascii', 'ignore').decode('ascii')
+    return ascii_text.replace(" ", "-").lower()
+
+
+@api.post("/expos/{expo_id}/classify", response=ClassifyItemSchema, tags=["IA"])
+def classify_item(request, expo_id: int, imatge: UploadedFile = File(...)):
+    """
+    Classifica una imatge i retorna l'ítem corresponent de l'expo.
+    Requereix que l'expo estigui en estat DISPONIBLE (model entrenat).
+    """
+    expo = Expo.objects.get(pk=expo_id)
+    if expo.estat != Expo.Estat.DISPONIBLE:
+        raise HttpError(400, "L'expo no té un model entrenat. Entrena la IA primer.")
+
+    ia_url = settings.IA_URL
+    token = _ia_login()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    img_bytes = imatge.read()
+    classify_resp = http_requests.post(
+        f"{ia_url}/classify",
+        headers=headers,
+        files={"image": (imatge.name, img_bytes, "image/jpeg")},
+        timeout=30,
+    )
+
+    if not classify_resp.ok:
+        raise HttpError(502, f"Error classificant: {classify_resp.text}")
+
+    data = classify_resp.json()
+    prediction = data.get("prediction", "")
+    model_version = data.get("model_version")
+
+    # Cerca l'ítem de l'expo que correspon al label predít
+    items = Item.objects.filter(expo_id=expo_id).prefetch_related('imatges')
+    matched_item = None
+    pred_norm = _normalize_label(prediction)
+
+    for item in items:
+        if _normalize_label(item.nom) == pred_norm:
+            matched_item = item
+            break
+
+    if not matched_item:
+        return {"trobat": False, "prediction": prediction, "model_version": model_version}
+
+    first_img = matched_item.imatges.filter(es_publica=True, es_destacada=True).first() \
+        or matched_item.imatges.filter(es_publica=True).first()
+    imatge_url = first_img.imatge.url if first_img and first_img.imatge else None
+
+    return {
+        "trobat": True,
+        "prediction": prediction,
+        "item_id": matched_item.id,
+        "nom": matched_item.nom,
+        "descripcio": matched_item.descripcio,
+        "imatge": imatge_url,
+        "model_version": model_version,
+    }

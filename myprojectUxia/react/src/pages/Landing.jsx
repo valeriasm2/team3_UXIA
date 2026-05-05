@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ExpoCard from "../components/ExpoCard";
 import IdentificaItem from "../IdentificaItem";
+import ItemClassify from "../components/ItemClassify";
 
 const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -200,16 +201,41 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
       </section>
 
       {/* IA SECTION */}
-      <section className="pt-16 border-t border-slate-100 dark:border-slate-700">
-        <div className="text-center mb-10">
+      <section className="pt-16 border-t border-slate-100 dark:border-slate-700 space-y-16">
+        <div className="text-center">
           <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
-            No saps quin cotxe és?
+            Identifica amb IA
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm">
-            Utilitza la nostra identificació visual "marIA"
+            Dues eines per reconèixer qualsevol vehicle de l'exposició
           </p>
         </div>
-        <IdentificaItem />
+
+        {/* ITEM ID — Classificació IA (marIA 2) */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-black uppercase tracking-widest rounded">
+              Item ID
+            </span>
+            <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+              Classificació per model entrenat
+            </p>
+          </div>
+          <ItemClassify />
+        </div>
+
+        {/* ITEM DESCRIPTION — Ollama Vision */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="px-2 py-0.5 bg-accent/10 text-accent text-[10px] font-black uppercase tracking-widest rounded">
+              Item Description
+            </span>
+            <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+              Descripció per visió IA · Ollama
+            </p>
+          </div>
+          <IdentificaItem />
+        </div>
       </section>
     </div>
   );
