@@ -6,6 +6,7 @@ import BackgroundDecoration from "./components/BackgroundDecoration";
 import ItemDetailModal from "./components/ItemDetailModal";
 import CookieBanner from "./components/CookieBanner";
 import { useUserTracking } from "./hooks/useUserTracking";
+import { LanguageProvider } from "./context/LanguageContext";
 import Landing from "./pages/Landing";
 import ExpoDetail from "./pages/ExpoDetail";
 import Historial from "./pages/Historial";
@@ -24,7 +25,7 @@ const MainApp = () => {
   const { showCookieBanner, acceptCookies, rejectCookies } = useUserTracking();
   const [expos, setExpos] = useState([]);
   const [nav, setNav] = useState({ activeExpo: null, items: [], index: 0 });
-  const [detail, setDetail] = useState({ item: null, images: [] });
+  const [detail, setDetail] = useState({ item: null, expo: null, images: [] });
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [modalItemId, setModalItemId] = useState(null);
 
@@ -42,11 +43,11 @@ const MainApp = () => {
     });
   }, [nav.activeExpo]);
 
-  const showDetail = async (item) => {
+  const showDetail = async (item, expo) => {
     try {
-      setDetail({ item, images: await getItemImages(item.id) });
+      setDetail({ item, expo, images: await getItemImages(item.id) });
     } catch {
-      setDetail({ item, images: [] });
+      setDetail({ item, expo, images: [] });
     }
   };
 
@@ -57,14 +58,14 @@ const MainApp = () => {
     // Primer posem l'expo activa
     setNav({ activeExpo: expo, items: [], index: 0 });
     setSelectedItemId(itemId);
-    
+
     // Carreguem els ítems immediatament i obrim el detall
     const items = await getItems(expoId);
     const item = items.find((i) => i.id === itemId);
     const index = items.findIndex((i) => i.id === itemId);
-    
+
     setNav({ activeExpo: expo, items, index: index >= 0 ? index : 0 });
-    if (item) showDetail(item);
+    if (item) showDetail(item, expo);
     setSelectedItemId(null);
   };
 
@@ -86,7 +87,7 @@ const MainApp = () => {
                 }))
               }
               onBack={() => setNav({ activeExpo: null, items: [], index: 0 })}
-              verDetalleItem={showDetail}
+              verDetalleItem={(item) => showDetail(item, nav.activeExpo)}
             />
           ) : (
             <Landing
@@ -103,7 +104,8 @@ const MainApp = () => {
       {detail.item && (
         <ItemDetailModal
           item={detail.item}
-          close={() => setDetail({ item: null, images: [] })}
+          expo={detail.expo}
+          close={() => setDetail({ item: null, expo: null, images: [] })}
           images={detail.images}
         />
       )}
@@ -137,31 +139,33 @@ const App = () => {
   const toggle = () => setIsDark((d) => !d);
 
   return (
-    <DarkContext.Provider value={{ isDark, toggle }}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/admin" element={<AdminLogin />} />
-          <Route
-            path="/admin/dashboard"
-            element={
-              <Protected>
-                <AdminDashboard />
-              </Protected>
-            }
-          />
-          <Route
-            path="/admin/exposicion/:id"
-            element={
-              <Protected>
-                <AdminExpoDetail />
-              </Protected>
-            }
-          />
-          <Route path="/" element={<MainApp />} />
-          <Route path="/historial" element={<Historial />} />
-        </Routes>
-      </BrowserRouter>
-    </DarkContext.Provider>
+    <LanguageProvider>
+      <DarkContext.Provider value={{ isDark, toggle }}>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/admin" element={<AdminLogin />} />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <Protected>
+                  <AdminDashboard />
+                </Protected>
+              }
+            />
+            <Route
+              path="/admin/exposicion/:id"
+              element={
+                <Protected>
+                  <AdminExpoDetail />
+                </Protected>
+              }
+            />
+            <Route path="/" element={<MainApp />} />
+            <Route path="/historial" element={<Historial />} />
+          </Routes>
+        </BrowserRouter>
+      </DarkContext.Provider>
+    </LanguageProvider>
   );
 };
 

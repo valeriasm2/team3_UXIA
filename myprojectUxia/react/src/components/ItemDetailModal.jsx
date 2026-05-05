@@ -1,7 +1,38 @@
 import React from "react";
+import { useTTS } from "../hooks/useTTS";
 
-const ItemDetailModal = ({ item, close, images }) => {
+const ItemDetailModal = ({ item, expo, close, images }) => {
+  const { speak, stop, isSpeaking, isSupported } = useTTS();
+
   if (!item) return null;
+
+  // Map Expo idioma codes to Web Speech language codes
+  const getLanguageCode = (idioma) => {
+    const languageVariants = {
+      ca: "ca",
+      es: "es",
+      en: "en",
+      fr: "fr",
+    };
+    return languageVariants[idioma] || "ca";
+  };
+
+  const handleReadItemName = () => {
+    if (isSpeaking) {
+      stop();
+    } else {
+      const expoLanguage = expo ? getLanguageCode(expo.idioma) : null;
+      speak(item.nom, expoLanguage);
+    }
+  };
+
+  const handleReadDescription = () => {
+    if (isSpeaking) {
+      stop();
+    } else {
+      speak(item.descripcio);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-fade-in">
@@ -19,18 +50,48 @@ const ItemDetailModal = ({ item, close, images }) => {
 
         <div className="space-y-10">
           <div>
-            <h2 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
-              {item.nom}
-            </h2>
+            <div className="flex items-center gap-2 mb-2">
+              <h2 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                {item.nom}
+              </h2>
+              {isSupported && (
+                <button
+                  onClick={handleReadItemName}
+                  title={`Pronunciar identificador${expo ? ` (${expo.idioma})` : ""}`}
+                  className={`flex-shrink-0 p-2 rounded-lg transition-all duration-200 font-semibold text-sm ${
+                    isSpeaking
+                      ? "bg-red-500 text-white hover:bg-red-600"
+                      : "bg-accent text-white hover:bg-accent-dark"
+                  }`}
+                >
+                  🔊
+                </button>
+              )}
+            </div>
             <p className="text-accent text-sm uppercase tracking-widest font-bold">
               Especificacions i Galeria
             </p>
           </div>
 
           <div className="border-l-4 border-slate-100 dark:border-slate-700 pl-6 py-2">
-            <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-xl italic">
-              "{item.descripcio}"
-            </p>
+            <div className="flex items-start gap-3">
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-xl italic flex-1">
+                "{item.descripcio}"
+              </p>
+              {isSupported && (
+                <button
+                  onClick={handleReadDescription}
+                  title={isSpeaking ? "Parar" : "Llegir descripció"}
+                  className={`flex-shrink-0 p-2 rounded-lg transition-all duration-200 font-semibold text-sm ${
+                    isSpeaking
+                      ? "bg-red-500 text-white hover:bg-red-600"
+                      : "bg-accent text-white hover:bg-accent-dark"
+                  }`}
+                >
+                  {isSpeaking ? "⏹️" : "🔊"}
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="space-y-6">
