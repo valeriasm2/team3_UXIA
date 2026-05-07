@@ -235,7 +235,7 @@ def update_expo(request, expo_id: int, data: UpdateExpoSchema = Form(...), imatg
         import traceback
         print(f"ERROR in update_expo: {str(e)}")
         print(traceback.format_exc())
-        raise HttpError(500, f"Error actualitzant expo: {str(e)}")
+        raise HttpError(422, f"Error actualitzant expo: {str(e)}")
 
 
 @api.get("/search", response=List[SearchResultSchema], tags=["Búsqueda"])
@@ -577,11 +577,11 @@ def _ia_login():
         timeout=10,
     )
     if not resp.ok:
-        raise HttpError(502, f"Error login IA: {resp.text}")
+        raise HttpError(422, f"Error login IA: {resp.text}")
     data = resp.json()
     token = data.get("token") or data.get("access_token") or data.get("access") or ""
     if not token:
-        raise HttpError(502, "El servei IA no ha retornat cap token")
+        raise HttpError(422, "El servei IA no ha retornat cap token")
     return token
 
 
@@ -621,8 +621,14 @@ def entrenar_expo(request, expo_id: int):
     token = _ia_login()
     headers = {"Authorization": f"Bearer {token}"}
 
-    # Esborra el dataset existent
+    # Esborra el dataset existent: primer per defecte, després cada label individualment
     http_requests.delete(f"{ia_url}/dataset/default", headers=headers, timeout=10)
+    labels_resp = http_requests.get(f"{ia_url}/dataset/labels", headers=headers, timeout=10)
+    if labels_resp.ok:
+        for lbl in labels_resp.json().get("labels", []):
+            label_name = lbl.get("label", "")
+            if label_name:
+                http_requests.delete(f"{ia_url}/dataset/labels/{label_name}", headers=headers, timeout=10)
 
     # Puja totes les imatges en un sol batch amb noms de fitxer únics
     # Salta ítems amb menys de 2 imatges (requisit mínim de la IA)
@@ -666,7 +672,7 @@ def entrenar_expo(request, expo_id: int):
     if not upload_resp.ok:
         expo.train_status = Expo.TrainStatus.ERROR
         expo.save()
-        raise HttpError(502, f"Error pujant imatges: {upload_resp.text}")
+        raise HttpError(422, f"Error pujant imatges: {upload_resp.text}")
 
     # Comprova que el dataset és entrenable
     runtime_resp = http_requests.get(f"{ia_url}/runtime", headers=headers, timeout=10)
@@ -684,7 +690,7 @@ def entrenar_expo(request, expo_id: int):
     if not train_resp.ok:
         expo.train_status = Expo.TrainStatus.ERROR
         expo.save()
-        raise HttpError(502, f"Error iniciant entrenament: {train_resp.text}")
+        raise HttpError(422, f"Error iniciant entrenament: {train_resp.text}")
 
     train_data = train_resp.json()
     ia_status = train_data.get("status", "RUNNING")
@@ -779,7 +785,7 @@ def classify_item(request, expo_id: int, imatge: UploadedFile = File(...)):
     )
 
     if not classify_resp.ok:
-        raise HttpError(502, f"Error classificant: {classify_resp.text}")
+        raise HttpError(422, f"Error classificant: {classify_resp.text}")
 
     data = classify_resp.json()
     prediction = data.get("prediction", "")

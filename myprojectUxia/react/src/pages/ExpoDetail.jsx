@@ -27,7 +27,7 @@ const ExpoDetail = ({
     if (isSpeaking) {
       stop();
     } else {
-      speak(itemActual.descripcio);
+      speak(itemActual.descripcio, getLanguageCode(expo.idioma));
     }
   };
 
@@ -180,7 +180,7 @@ const ExpoDetail = ({
                       {isSupported && (
                         <button
                           onClick={handleReadItemName}
-                          title="Pronunciar identificador (en l'idioma de l'exposició)"
+                          title={t('read_item_name_tooltip')}
                           className={`flex-shrink-0 p-2 rounded-lg transition-all duration-200 font-semibold text-sm ${
                             isSpeaking
                               ? "bg-red-500 text-white hover:bg-red-600"
@@ -202,14 +202,14 @@ const ExpoDetail = ({
                     {isSupported && (
                       <button
                         onClick={handleReadDescription}
-                        title={isSpeaking ? "Parar" : "Llegir descripció"}
+                        title={isSpeaking ? t('stop_tts') : t('listen_description')}
                         className={`flex-shrink-0 p-2 rounded-lg transition-all duration-200 font-semibold text-sm ${
                           isSpeaking
                             ? "bg-red-500 text-white hover:bg-red-600"
                             : "bg-accent text-white hover:bg-accent-dark"
                         }`}
                       >
-                        {isSpeaking ? "⏹️ Parar" : "🔊 Escoltar"}
+                        {isSpeaking ? `⏹️ ${t('stop_tts')}` : `🔊 ${t('listen_description')}`}
                       </button>
                     )}
                   </div>

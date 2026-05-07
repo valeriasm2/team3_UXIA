@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 const ItemClassify = () => {
+  const { t } = useTranslation();
   const [expos, setExpos] = useState([]);
   const [selectedExpo, setSelectedExpo] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -84,7 +86,7 @@ const ItemClassify = () => {
         setResult(data);
       }
     } catch {
-      setResult({ error: "No s'ha pogut connectar amb el servidor" });
+      setResult({ error: t('train_connection_error') });
     } finally {
       setLoading(false);
     }
@@ -97,15 +99,15 @@ const ItemClassify = () => {
           <div className="w-full max-w-lg rounded-2xl overflow-hidden bg-black relative">
             {camError ? (
               <div className="p-8 text-center space-y-4">
-                <p className="text-red-400 text-sm">No s'ha pogut accedir a la càmera: {camError}</p>
-                <button onClick={closeCamera} className="px-4 py-2 bg-white text-black rounded-lg font-semibold">Tancar</button>
+                <p className="text-red-400 text-sm">{t('camera_access_error')}: {camError}</p>
+                <button onClick={closeCamera} className="px-4 py-2 bg-white text-black rounded-lg font-semibold">{t('close')}</button>
               </div>
             ) : (
               <>
                 <video ref={videoRef} autoPlay playsInline muted className="w-full aspect-video object-cover" />
                 <div className="absolute bottom-0 inset-x-0 p-4 bg-linear-to-t from-black/70 flex justify-center gap-4">
-                  <button onClick={closeCamera} className="px-5 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold transition">Cancel·lar</button>
-                  <button onClick={capturePhoto} className="px-6 py-2 bg-white hover:bg-gray-100 text-black rounded-xl font-bold transition">📸 Capturar</button>
+                  <button onClick={closeCamera} className="px-5 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold transition">{t('cancel')}</button>
+                  <button onClick={capturePhoto} className="px-6 py-2 bg-white hover:bg-gray-100 text-black rounded-xl font-bold transition">📸 {t('capture')}</button>
                 </div>
               </>
             )}
@@ -118,20 +120,20 @@ const ItemClassify = () => {
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center text-xl">🎯</div>
             <div>
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white">Item ID</h2>
-              <p className="text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px]">Classificació IA · marIA 2</p>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-white">{t('item_id_title')}</h2>
+              <p className="text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px]">{t('item_id_subtitle')}</p>
             </div>
           </div>
 
           {/* Selector d'expo */}
           {expos.length === 0 ? (
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl p-4 text-sm text-yellow-700 dark:text-yellow-400">
-              No hi ha exposicions disponibles amb model entrenat. Entrena la IA des del panell d'administració.
+              {t('no_trained_expos')}
             </div>
           ) : (
             <div>
               <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">
-                Selecciona l'exposició
+                {t('select_expo')}
               </label>
               <select
                 value={selectedExpo?.id || ""}
@@ -143,7 +145,7 @@ const ItemClassify = () => {
                 }}
                 className="w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-800 dark:text-white text-sm font-semibold focus:ring-2 focus:ring-green-500/30 outline-none"
               >
-                <option value="">— Tria una exposició —</option>
+                <option value="">{t('choose_expo')}</option>
                 {expos.map((expo) => (
                   <option key={expo.id} value={expo.id}>{expo.nom}</option>
                 ))}
@@ -159,33 +161,33 @@ const ItemClassify = () => {
                     <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                     {loading && (
                       <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center">
-                        <span className="text-green-600 font-bold text-xs uppercase tracking-widest animate-pulse">Classificant...</span>
+                        <span className="text-green-600 font-bold text-xs uppercase tracking-widest animate-pulse">{t('classifying')}</span>
                       </div>
                     )}
                   </>
                 ) : (
                   <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-slate-600">
                     <div className="text-4xl">🎯</div>
-                    <p className="text-xs font-bold uppercase">Sense imatge</p>
+                    <p className="text-xs font-bold uppercase">{t('no_image')}</p>
                   </div>
                 )}
               </div>
 
               <div className="space-y-3">
-                <p className="text-slate-500 dark:text-slate-400 text-sm">Fes una foto o puja una imatge per identificar l'ítem de l'exposició.</p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">{t('classify_description')}</p>
                 <button
                   onClick={openCamera}
                   disabled={loading}
                   className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm tracking-widest uppercase shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  📷 {loading ? "CLASSIFICANT..." : "OBRIR CÀMERA"}
+                  📷 {loading ? t('classifying').toUpperCase() : t('open_camera').toUpperCase()}
                 </button>
                 <button
                   onClick={() => galleryRef.current.click()}
                   disabled={loading}
                   className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white rounded-xl font-bold text-sm tracking-widest uppercase transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  🖼️ PUJAR IMATGE
+                  🖼️ {t('upload_image').toUpperCase()}
                 </button>
                 <input ref={galleryRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
               </div>
@@ -206,7 +208,7 @@ const ItemClassify = () => {
               ) : result.trobat ? (
                 <>
                   <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-bold text-sm">
-                    <span>✅</span><span>Ítem identificat</span>
+                    <span>✅</span><span>{t('item_identified')}</span>
                   </div>
                   <div className="flex gap-4">
                     {result.imatge && (
@@ -224,11 +226,11 @@ const ItemClassify = () => {
               ) : (
                 <>
                   <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 font-bold text-sm">
-                    <span>❓</span><span>No s'ha trobat cap coincidència</span>
+                    <span>❓</span><span>{t('no_match_found')}</span>
                   </div>
                   <p className="text-slate-500 dark:text-slate-400 text-sm">
-                    L'ítem no correspon a cap element d'aquesta exposició.
-                    {result.prediction && <span className="block mt-1 text-xs">Predicció IA: <span className="font-mono">{result.prediction}</span></span>}
+                    {t('no_match_description')}
+                    {result.prediction && <span className="block mt-1 text-xs">{t('ai_prediction')} <span className="font-mono">{result.prediction}</span></span>}
                   </p>
                 </>
               )}

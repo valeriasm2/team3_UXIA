@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 const STATUS_COLORS = {
   IDLE:      "bg-gray-100 text-gray-600",
@@ -24,6 +25,7 @@ const POLLING_INTERVAL_MS = 5000;
 const ACTIVE_STATUSES = ["QUEUED", "RUNNING", "REPLACE"];
 
 export default function BtnEntrenarIA({ expoId, initialTrainStatus = "IDLE", onTrainOk }) {
+  const { t } = useTranslation();
   const [trainStatus, setTrainStatus] = useState(initialTrainStatus);
   const [statusInfo, setStatusInfo] = useState({});
   const [loading, setLoading] = useState(false);
@@ -78,20 +80,20 @@ export default function BtnEntrenarIA({ expoId, initialTrainStatus = "IDLE", onT
   }, [trainStatus]);
 
   const handleEntrenar = async () => {
-    if (!window.confirm("Vols iniciar l'entrenament de la IA amb les imatges d'aquesta exposició?")) return;
+    if (!window.confirm(t('train_ia_confirm'))) return;
     setLoading(true);
     setError(null);
     try {
       const resp = await fetch(`/api/expos/${expoId}/entrenar`, { method: "POST" });
       const data = await resp.json();
       if (!resp.ok) {
-        setError(data.detail || "Error iniciant l'entrenament");
+        setError(data.detail || t('train_error_start'));
         return;
       }
       setTrainStatus(data.train_status);
       setStatusInfo(data);
     } catch (e) {
-      setError("No s'ha pogut connectar amb el servidor");
+      setError(t('train_connection_error'));
     } finally {
       setLoading(false);
     }
@@ -104,7 +106,7 @@ export default function BtnEntrenarIA({ expoId, initialTrainStatus = "IDLE", onT
     <div className="flex flex-col items-end gap-2">
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Current Train</span>
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('current_train')}</span>
           <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${colorClass}`}>
             {isActive && (
               <span className="inline-block w-2 h-2 rounded-full bg-current animate-pulse" />
@@ -122,7 +124,7 @@ export default function BtnEntrenarIA({ expoId, initialTrainStatus = "IDLE", onT
               : "bg-gray-200 text-gray-400 cursor-not-allowed"
           }`}
         >
-          {loading ? "Iniciant..." : isActive ? "Entrenant..." : "Entrena IA Expo"}
+          {loading ? t('train_starting') : isActive ? t('train_running') : t('train_ia_expo')}
         </button>
       </div>
 

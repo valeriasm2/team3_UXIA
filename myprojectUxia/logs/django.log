@@ -17691,3 +17691,9 @@ response
     For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
 ERROR 2026-05-07 14:28:35,375 log Internal Server Error: /api/expos
 ERROR 2026-05-07 14:28:35,376 basehttp "GET /api/expos?propietari=sparkly HTTP/1.1" 500 1191
+ERROR 2026-05-07 15:24:13,932 log Bad Gateway: /api/expos/4/entrenar
+ERROR 2026-05-07 15:24:26,281 log Bad Gateway: /api/expos/4/entrenar
+ERROR 2026-05-07 15:28:04,531 log Bad Gateway: /api/expos/4/entrenar
+ERROR 2026-05-07 15:28:12,288 log Bad Gateway: /api/expos/4/entrenar
+ERROR 2026-05-07 15:28:24,727 log Bad Gateway: /api/expos/4/entrenar
+ERROR 2026-05-07 15:32:07,477 log Bad Gateway: /api/expos/4/entrenar

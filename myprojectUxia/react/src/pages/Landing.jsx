@@ -212,7 +212,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
               Item ID
             </span>
             <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-              Classificació per model entrenat
+              {t('item_id_section_label')}
             </p>
           </div>
           <ItemClassify />
@@ -225,7 +225,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
               Item Description
             </span>
             <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-              Descripció per visió IA · Ollama
+              {t('item_description_section_label')}
             </p>
           </div>
           <IdentificaItem />
