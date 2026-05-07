@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const AdminExpoDetail = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [expo, setExpo] = useState(null);
@@ -23,7 +25,7 @@ const AdminExpoDetail = () => {
       const expoResponse = await fetch(`/api/expos/${id}`);
 
       if (!expoResponse.ok) {
-        throw new Error("Error carregant l'exposició");
+        throw new Error(t('error_loading_expo'));
       }
 
       const expoData = await expoResponse.json();
@@ -31,7 +33,7 @@ const AdminExpoDetail = () => {
       const itemsResponse = await fetch(`/api/items?expo_id=${id}`);
 
       if (!itemsResponse.ok) {
-        throw new Error("Error carregant els items");
+        throw new Error(t('error_loading_items'));
       }
 
       const itemsData = await itemsResponse.json();
@@ -71,20 +73,12 @@ const AdminExpoDetail = () => {
     }
   };
 
-  const getEstatText = (estat) => {
-    switch(estat) {
-      case 'DISPONIBLE': return 'Disponible';
-      case 'ACTUALITZABLE': return 'Actualitzable';
-      default: return 'Inici';
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin text-3xl mb-2">⏳</div>
-          <p className="text-gray-600">Carregant detalls de l'exposició...</p>
+          <p className="text-gray-600">{t('loading_expo_details')}</p>
         </div>
       </div>
     );
@@ -94,12 +88,12 @@ const AdminExpoDetail = () => {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-500 mb-4">Error: {error}</p>
+          <p className="text-red-500 mb-4">{t('error')}: {error}</p>
           <button 
             onClick={cargarExpoYItems}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg"
           >
-            Reintentar
+            {t('retry')}
           </button>
         </div>
       </div>
@@ -109,7 +103,7 @@ const AdminExpoDetail = () => {
   if (!expo) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-gray-600">No s'ha trobat l'exposició</p>
+        <p className="text-gray-600">{t('expo_not_found')}</p>
       </div>
     );
   }
@@ -122,7 +116,7 @@ const AdminExpoDetail = () => {
             onClick={() => navigate("/admin/dashboard")}
             className="text-blue-600 hover:text-blue-800 mb-4 flex items-center gap-2"
           >
-            ← Tornar al Dashboard
+            ← {t('back_to_dashboard')}
           </button>
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -136,7 +130,7 @@ const AdminExpoDetail = () => {
                   {expo.data_inici} → {expo.data_fi}
                 </p>
                 <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getEstatColor(expo.estat)}`}>
-                  {getEstatText(expo.estat)}
+                  {t(expo.estat === 'DISPONIBLE' ? 'available' : expo.estat === 'ACTUALITZABLE' ? 'updatable' : 'init')}
                 </span>
               </div>
               <p className="text-sm text-gray-500 mt-3 max-w-2xl">
@@ -145,7 +139,7 @@ const AdminExpoDetail = () => {
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-gray-900">
-                {items.length} {items.length === 1 ? "Item" : "Items"}
+                {items.length} {items.length === 1 ? t('item_singular') : t('items_plural')}
               </div>
             </div>
           </div>
@@ -155,7 +149,7 @@ const AdminExpoDetail = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {items.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-gray-600 mb-4">Aquesta exposició no té items</p>
+            <p className="text-gray-600 mb-4">{t('no_items_in_expo')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -188,12 +182,12 @@ const AdminExpoDetail = () => {
                   </h3>
                   
                   <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                    {item.descripcio || "Sense descripció"}
+                    {item.descripcio || t('no_description')}
                   </p>
 
                   {item.otras_imagenes && item.otras_imagenes.length > 0 && (
                     <div className="mt-3">
-                      <p className="text-xs text-gray-400 mb-2">Més imatges:</p>
+                      <p className="text-xs text-gray-400 mb-2">{t('more_images')}:</p>
                       <div className="flex gap-2 flex-wrap">
                         {item.otras_imagenes.slice(0, 4).map((img) => (
                           <img

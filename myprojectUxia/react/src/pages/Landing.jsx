@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import ExpoCard from "../components/ExpoCard";
 import IdentificaItem from "../IdentificaItem";
 
 const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,17 +41,15 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 space-y-16">
-      {/* SEARCH SECTION */}
       <section className="space-y-12">
         <div className="text-center space-y-4 max-w-2xl mx-auto">
           <h2 className="text-4xl font-extrabold text-slate-900 dark:text-white">
-            Explora UXIA
+            {t('explore_uxia')}
           </h2>
           <p className="text-slate-400 dark:text-slate-500 text-sm">
-            Busca una ciutat o esdeveniment per veure els cotxes de l'exposició.
+            {t('search_placeholder')}
           </p>
 
-          {/* SEARCH BAR */}
           <div className="relative w-full mt-6">
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
               <svg
@@ -69,7 +69,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
             </div>
             <input
               type="text"
-              placeholder="Escriu almenys 3 lletres..."
+              placeholder={t('search_min_chars')}
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
               className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-3 pl-12 pr-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all shadow-sm"
@@ -78,7 +78,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
             {searchTerm.length > 0 && searchTerm.length < 3 && (
               <div className="absolute top-full left-0 right-0 mt-4 text-center animate-pulse">
                 <p className="text-accent/50 text-[10px] font-black uppercase tracking-[0.2em]">
-                  Escriu {3 - searchTerm.length} caràcters més...
+                  {t('search_more_chars', { count: 3 - searchTerm.length })}
                 </p>
               </div>
             )}
@@ -86,17 +86,15 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
             {isLoading && searchTerm.length >= 3 && (
               <div className="absolute top-full left-0 right-0 mt-4 text-center">
                 <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
-                  Cercant...
+                  {t('searching')}
                 </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* RESULTS SECTION */}
         {showResults ? (
           <div className="space-y-12 animate-fade-in">
-            {/* EXPOS */}
             {expoResults.length > 0 && (
               <div>
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
@@ -104,7 +102,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
                     <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-700 rounded text-[10px] font-bold">
                       EXPO
                     </span>
-                    Exposicions ({expoResults.length})
+                    {t('expositions')} ({expoResults.length})
                   </h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-10">
@@ -124,7 +122,6 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
               </div>
             )}
 
-            {/* ITEMS */}
             {itemResults.length > 0 && (
               <div>
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
@@ -132,7 +129,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
                     <span className="inline-flex items-center justify-center w-6 h-6 bg-purple-100 text-purple-700 rounded text-[10px] font-bold">
                       ITEM
                     </span>
-                    Ítems ({itemResults.length})
+                    {t('items')} ({itemResults.length})
                   </h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -165,16 +162,14 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
               </div>
             )}
 
-            {/* NO RESULTS */}
             {expoResults.length === 0 && itemResults.length === 0 && (
               <div className="text-center py-16 bg-slate-50 rounded-xl border border-dashed border-slate-200">
                 <p className="text-slate-500 dark:text-slate-400 text-sm">
-                  No hi ha coincidències per "{searchTerm}"
+                  {t('no_results_for')} "{searchTerm}"
                 </p>
               </div>
             )}
 
-            {/* CLEAR */}
             {searchTerm && (
               <div className="flex justify-center">
                 <button
@@ -184,7 +179,7 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
                   }}
                   className="text-slate-400 hover:text-slate-600 text-[10px] font-bold uppercase transition-colors"
                 >
-                  Netejar ✕
+                  {t('clear')} ✕
                 </button>
               </div>
             )}
@@ -193,20 +188,19 @@ const Landing = ({ expos, onSelectExpo, onSelectItem }) => {
           <div className="py-12 flex flex-col items-center opacity-20">
             <div className="w-px h-16 bg-accent rounded-full"></div>
             <p className="mt-4 text-[10px] font-bold uppercase tracking-widest">
-              Esperant cerca
+              {t('waiting_search')}
             </p>
           </div>
         )}
       </section>
 
-      {/* IA SECTION */}
       <section className="pt-16 border-t border-slate-100 dark:border-slate-700">
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
-            No saps quin cotxe és?
+            {t('dont_know_car')}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm">
-            Utilitza la nostra identificació visual "marIA"
+            {t('use_visual_id')}
           </p>
         </div>
         <IdentificaItem />

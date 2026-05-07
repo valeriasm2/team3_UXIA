@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const EditExpoModal = ({ expo, onClose, onSuccess }) => {
+  const { t } = useTranslation();
   const [nom, setNom] = useState(expo.nom || "");
   const [lloc, setLloc] = useState(expo.lloc || "");
   const [descripcio, setDescripcio] = useState(expo.descripcio || "");
@@ -42,7 +44,7 @@ const EditExpoModal = ({ expo, onClose, onSuccess }) => {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.detail || `Error ${res.status}`);
+        throw new Error(data.detail || `${t('error')} ${res.status}`);
       }
 
       const updated = await res.json();
@@ -64,7 +66,7 @@ const EditExpoModal = ({ expo, onClose, onSuccess }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-            <h2 className="text-lg font-bold text-gray-900">Editar Exposició</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t('edit_expo_title')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -78,7 +80,7 @@ const EditExpoModal = ({ expo, onClose, onSuccess }) => {
           {/* Nom */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nom <span className="text-red-500">*</span>
+              {t('name')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -92,7 +94,7 @@ const EditExpoModal = ({ expo, onClose, onSuccess }) => {
           {/* Lloc */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Lloc <span className="text-red-500">*</span>
+              {t('place')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -100,14 +102,14 @@ const EditExpoModal = ({ expo, onClose, onSuccess }) => {
               onChange={(e) => setLloc(e.target.value)}
               required
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Lloc de l'exposició"
+              placeholder={t('expo_place_placeholder')}
             />
           </div>
 
           {/* Descripció */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Descripció <span className="text-red-500">*</span>
+              {t('description')} <span className="text-red-500">*</span>
             </label>
             <textarea
               value={descripcio}
@@ -122,7 +124,7 @@ const EditExpoModal = ({ expo, onClose, onSuccess }) => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data inici <span className="text-red-500">*</span>
+                {t('start_date')} <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
@@ -134,7 +136,7 @@ const EditExpoModal = ({ expo, onClose, onSuccess }) => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data fi <span className="text-red-500">*</span>
+                {t('end_date')} <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
@@ -149,8 +151,8 @@ const EditExpoModal = ({ expo, onClose, onSuccess }) => {
           {/* Imatge */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Imatge{" "}
-              <span className="text-gray-400 font-normal text-xs">(opcional — substitueix l'actual)</span>
+              {t('image')}{" "}
+              <span className="text-gray-400 font-normal text-xs">({t('optional_replace')})</span>
             </label>
 
             {/* Previsualització actual o nova */}
@@ -168,7 +170,7 @@ const EditExpoModal = ({ expo, onClose, onSuccess }) => {
                   d="M4 16l4.586-4.586A2 2 0 0111.414 11H13a2 2 0 011.414.586L19 16M14 8a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
               <span className="text-sm text-gray-500">
-                {imatge ? imatge.name : "Selecciona una nova imatge"}
+                {imatge ? imatge.name : t('select_new_image')}
               </span>
               <input
                 type="file"
@@ -193,14 +195,14 @@ const EditExpoModal = ({ expo, onClose, onSuccess }) => {
               onClick={onClose}
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 transition"
             >
-              Cancel·lar
+              {t('cancel')}
             </button>
             <button
               type="submit"
               disabled={loading}
               className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition disabled:opacity-50"
             >
-              {loading ? "Guardant…" : "Guardar canvis"}
+              {loading ? t('saving') : t('save_changes')}
             </button>
           </div>
         </form>
