@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import NouItemModal from "../components/NouItemModal";
 import EditExpoModal from "../components/EditExpoModal";
 import EditItemModal from "../components/EditItemModal";
@@ -22,14 +23,21 @@ const Pencil = () => (
   </svg>
 );
 
-const badge = (estat) =>
+const badgeClass = (estat) =>
   ({
     INIT: "bg-gray-100 text-gray-700",
     DISPONIBLE: "bg-green-100 text-green-700",
     ACTUALITZABLE: "bg-amber-100 text-amber-700",
   })[estat] ?? "bg-gray-100 text-gray-700";
 
-const Thumb = ({ item }) => (
+const badgeText = (estat, t) =>
+  ({
+    INIT: t('init'),
+    DISPONIBLE: t('available'),
+    ACTUALITZABLE: t('updatable'),
+  })[estat] ?? t('init');
+
+const Thumb = ({ item, t }) => (
   <div className="flex flex-col items-center" title={item.nom}>
     {item.imatge_destacada ? (
       <img
@@ -58,6 +66,7 @@ const EditBtn = ({ onClick }) => (
 );
 
 const AdminDashboard = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isDark, toggle } = useDark();
   const [user, setUser] = useState(null);
@@ -150,7 +159,7 @@ const AdminDashboard = () => {
 
   const onEditExpoOk = (updated) => {
     setEditExpo(null);
-    showToast(`Exposició "${updated.nom}" actualitzada.`);
+    showToast(t('expo_updated', { name: updated.nom }));
     setMyExpos((p) =>
       p.map((e) => (e.id === updated.id ? { ...updated, items: e.items } : e)),
     );
@@ -159,11 +168,11 @@ const AdminDashboard = () => {
 
   const onNouItemOk = (item, ambImg) => {
     setNouItemExpo(null);
-    showToast(
-      ambImg
-        ? `"${item.nom}" creat. Expo → ACTUALITZABLE.`
-        : `"${item.nom}" creat.`,
-    );
+    if (ambImg) {
+      showToast(t('item_created_with_update', { name: item.nom }));
+    } else {
+      showToast(t('item_created', { name: item.nom }));
+    }
     if (user) fetchExpos(user);
     if (view && typeof view === "object") fetchItems(view.id);
   };
@@ -181,13 +190,11 @@ const AdminDashboard = () => {
   const onEditItemOk = (updated, ambImg) => {
     setEditItem(null);
     if (updated.deleted) {
-      showToast(`Ítem eliminat correctament.`);
+      showToast(t('item_deleted'));
+    } else if (ambImg) {
+      showToast(t('item_updated_with_update', { name: updated.nom }));
     } else {
-      showToast(
-        ambImg
-          ? `"${updated.nom}" actualitzat. Expo → ACTUALITZABLE.`
-          : `"${updated.nom}" actualitzat.`,
-      );
+      showToast(t('item_updated', { name: updated.nom }));
     }
     if (view && typeof view === "object") fetchItems(view.id);
     if (user) fetchExpos(user);
@@ -206,16 +213,16 @@ const AdminDashboard = () => {
       <header className="bg-white dark:bg-slate-800 shadow dark:shadow-slate-700/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center gap-4 flex-wrap">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Panel UXIA</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('admin_panel')}</h1>
             <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-              Usuari:{" "}
+              {t('user_label')}:{" "}
               <span className="font-semibold text-gray-900 dark:text-white">{user}</span>
             </p>
           </div>
           <div className="flex gap-3 flex-wrap">
             <button
               onClick={toggle}
-              aria-label="Cambiar tema"
+              aria-label={t('change_theme')}
               className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-200 cursor-pointer flex items-center justify-center"
             >
               {isDark ? (
@@ -245,14 +252,14 @@ const AdminDashboard = () => {
                 onClick={() => setView("list")}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition"
               >
-                Les meves exposicions ({myExpos.length})
+                {t('my_expositions')} ({myExpos.length})
               </button>
             )}
             <button
               onClick={handleLogout}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition"
             >
-              Tancar sessió
+              {t('logout')}
             </button>
           </div>
         </div>
@@ -263,16 +270,16 @@ const AdminDashboard = () => {
           <div className="min-h-96 flex items-center justify-center">
             <div className="text-center space-y-6">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Benvingut, {user}!
+                {t('welcome')}, {user}!
               </h2>
               <p className="text-gray-500 dark:text-gray-400">
-                Accedeix a les teves exposicions per gestionar-les
+                {t('access_expositions')}
               </p>
               <button
                 onClick={() => setView("list")}
                 className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-lg transition hover:scale-105 shadow-lg"
               >
-                Les meves exposicions ({myExpos.length})
+                {t('my_expositions')} ({myExpos.length})
               </button>
             </div>
           </div>
@@ -282,32 +289,32 @@ const AdminDashboard = () => {
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Les meves exposicions
+                {t('my_expositions')}
               </h2>
               <button
                 onClick={() => setView(null)}
                 className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               >
-                ← Tornar
+                ← {t('back')}
               </button>
             </div>
 
             {loading ? (
               <p className="text-center py-12 text-gray-500 dark:text-gray-400 animate-pulse">
-                Carregant exposicions...
+                {t('loading_expositions')}
               </p>
             ) : myExpos.length === 0 ? (
               <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-12 text-center text-gray-500 dark:text-gray-400">
-                No tens cap exposició creada.
+                {t('no_expositions')}
               </div>
             ) : (
               <>
                 <div className="hidden md:block bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden">
                   <div className="grid grid-cols-12 gap-4 p-4 bg-gray-50 dark:bg-slate-700 border-b dark:border-slate-600 text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    <div className="col-span-3">Nom Exposició</div>
-                    <div className="col-span-2">Estat</div>
-                    <div className="col-span-4">Descripció</div>
-                    <div className="col-span-3">Preview Items</div>
+                    <div className="col-span-3">{t('expo_name')}</div>
+                    <div className="col-span-2">{t('status')}</div>
+                    <div className="col-span-4">{t('description')}</div>
+                    <div className="col-span-3">{t('preview_items')}</div>
                   </div>
                   {myExpos.map((expo) => (
                     <div
@@ -328,17 +335,17 @@ const AdminDashboard = () => {
                       </div>
                       <div className="col-span-2">
                         <span
-                          className={`px-2 py-1 text-xs font-semibold rounded-full ${badge(expo.estat)}`}
+                          className={`px-2 py-1 text-xs font-semibold rounded-full ${badgeClass(expo.estat)}`}
                         >
-                          {expo.estat}
+                          {badgeText(expo.estat, t)}
                         </span>
                       </div>
                       <div className="col-span-4 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                        {expo.descripcio || "Sense descripció"}
+                        {expo.descripcio || t('no_description')}
                       </div>
                       <div className="col-span-3 flex gap-2 flex-wrap items-center">
                         {expo.items?.slice(0, 3).map((item) => (
-                          <Thumb key={item.id} item={item} />
+                          <Thumb key={item.id} item={item} t={t} />
                         ))}
                         {expo.items?.length > 3 && (
                           <span className="text-xs text-blue-600 dark:text-blue-400">
@@ -369,9 +376,9 @@ const AdminDashboard = () => {
                         </div>
                         <div className="flex items-center gap-2 ml-2">
                           <span
-                            className={`px-2 py-1 text-xs font-semibold rounded-full ${badge(expo.estat)}`}
+                            className={`px-2 py-1 text-xs font-semibold rounded-full ${badgeClass(expo.estat)}`}
                           >
-                            {expo.estat}
+                            {badgeText(expo.estat, t)}
                           </span>
                           <EditBtn onClick={() => setEditExpo(expo)} />
                         </div>
@@ -380,18 +387,18 @@ const AdminDashboard = () => {
                         className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-3 cursor-pointer"
                         onClick={() => setView(expo)}
                       >
-                        {expo.descripcio || "Sense descripció"}
+                        {expo.descripcio || t('no_description')}
                       </p>
                       <div
                         className="flex gap-2 flex-wrap cursor-pointer"
                         onClick={() => setView(expo)}
                       >
                         {expo.items?.slice(0, 4).map((item) => (
-                          <Thumb key={item.id} item={item} />
+                          <Thumb key={item.id} item={item} t={t} />
                         ))}
                         {expo.items?.length > 4 && (
                           <span className="self-center text-xs text-blue-600 dark:text-blue-400">
-                            +{expo.items.length - 4} més
+                            +{expo.items.length - 4} {t('more')}
                           </span>
                         )}
                       </div>
@@ -411,7 +418,7 @@ const AdminDashboard = () => {
                   onClick={() => setView("list")}
                   className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-2 block"
                 >
-                  ← Exposicions
+                  ← {t('expositions')}
                 </button>
                 <div className="flex items-center gap-3">
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -421,9 +428,9 @@ const AdminDashboard = () => {
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{view.lloc}</p>
                 <span
-                  className={`mt-2 inline-block px-2.5 py-1 text-xs font-semibold rounded-full ${badge(view.estat)}`}
+                  className={`mt-2 inline-block px-2.5 py-1 text-xs font-semibold rounded-full ${badgeClass(view.estat)}`}
                 >
-                  {view.estat}
+                  {badgeText(view.estat, t)}
                 </span>
               </div>
               <div className="flex flex-col items-end gap-2">
@@ -431,7 +438,7 @@ const AdminDashboard = () => {
                   onClick={() => setNouItemExpo(view)}
                   className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
                 >
-                  + NOU ITEM
+                  + {t('add_new_item')}
                 </button>
                 <BtnEntrenarIA
                   expoId={view.id}
@@ -485,7 +492,7 @@ const AdminDashboard = () => {
                       {item.altres_imatges?.length > 0 && (
                         <div className="mt-auto">
                           <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">
-                            Més imatges:
+                            {t('more_images')}:
                           </p>
                           <div className="flex gap-1 flex-wrap">
                             {item.altres_imatges.map((img) => (
@@ -506,13 +513,13 @@ const AdminDashboard = () => {
             ) : (
               <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-12 text-center">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">
-                  Aquesta exposició no té ítems.
+                  {t('no_items_in_expo')}
                 </p>
                 <button
                   onClick={() => setNouItemExpo(view)}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
                 >
-                  + Afegir primer ítem
+                  + {t('add_first_item')}
                 </button>
               </div>
             )}

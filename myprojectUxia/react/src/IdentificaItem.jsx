@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 const IdentificaItem = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -92,17 +94,16 @@ const IdentificaItem = () => {
 
     try {
       const res = await fetch("/api/identify", { method: "POST", body });
-      if (!res.ok) throw new Error(`Error ${res.status}`);
-      
+      if (!res.ok) throw new Error(`${t('error')} ${res.status}`);
+
       const data = await res.json();
       setResult(data);
-      
-      // Sincronitzar la cookie si el servidor en genera una de nova o la confirma
+
       if (data.cookie_id && !userId) {
         setCookie("uxia_user_id", data.cookie_id);
       }
     } catch (err) {
-      setResult({ descripcio: `Error: ${err.message}`, etiquetes: ["error"] });
+      setResult({ descripcio: `${t('error')}: ${err.message}`, etiquetes: ["error"] });
     } finally {
       setLoading(false);
     }
@@ -116,13 +117,13 @@ const IdentificaItem = () => {
             {camError ? (
               <div className="p-8 text-center space-y-4">
                 <p className="text-red-400 text-sm">
-                  No s'ha pogut accedir a la càmera: {camError}
+                  {t('camera_error')}: {camError}
                 </p>
                 <button
                   onClick={closeCamera}
                   className="px-4 py-2 bg-white text-black rounded-lg font-semibold"
                 >
-                  Tancar
+                  {t('close')}
                 </button>
               </div>
             ) : (
@@ -139,13 +140,13 @@ const IdentificaItem = () => {
                     onClick={closeCamera}
                     className="px-5 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold transition"
                   >
-                    Cancel·lar
+                    {t('cancel')}
                   </button>
                   <button
                     onClick={capturePhoto}
                     className="px-6 py-2 bg-white hover:bg-gray-100 text-black rounded-xl font-bold transition"
                   >
-                    📸 Capturar
+                    📸 {t('capture')}
                   </button>
                 </div>
               </>
@@ -162,10 +163,10 @@ const IdentificaItem = () => {
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-800 dark:text-white">
-                Identifica amb marIA
+                {t('identifica_title')}
               </h2>
               <p className="text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px]">
-                Ollama Vision
+                {t('ollama_vision')}
               </p>
             </div>
           </div>
@@ -182,7 +183,7 @@ const IdentificaItem = () => {
                   {loading && (
                     <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center">
                       <span className="text-accent font-bold text-xs uppercase tracking-widest animate-pulse">
-                        Analitzant...
+                        {t('analyzing')}
                       </span>
                     </div>
                   )}
@@ -190,7 +191,7 @@ const IdentificaItem = () => {
               ) : (
                 <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-slate-600">
                   <div className="text-4xl">📸</div>
-                  <p className="text-xs font-bold uppercase">Sense imatge</p>
+                  <p className="text-xs font-bold uppercase">{t('no_image')}</p>
                 </div>
               )}
             </div>
@@ -198,11 +199,10 @@ const IdentificaItem = () => {
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">
-                  Fes una foto
+                  {t('take_photo_title')}
                 </h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
-                  Utilitza la càmera o puja una imatge per identificar qualsevol
-                  vehicle de l'exposició.
+                  {t('identifica_description')}
                 </p>
               </div>
 
@@ -212,7 +212,7 @@ const IdentificaItem = () => {
                   disabled={loading}
                   className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-accent hover:bg-accent-dark text-white rounded-xl font-bold text-sm tracking-widest uppercase shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  📷 {loading ? "PROCESSANT..." : "OBRIR CÀMERA"}
+                  📷 {loading ? t('processing') : t('open_camera')}
                 </button>
 
                 <button
@@ -220,7 +220,7 @@ const IdentificaItem = () => {
                   disabled={loading}
                   className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white rounded-xl font-bold text-sm tracking-widest uppercase transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  🖼️ PUJAR IMATGE
+                  🖼️ {t('upload_image')}
                 </button>
 
                 <input
@@ -238,7 +238,7 @@ const IdentificaItem = () => {
             <div className="bg-white dark:bg-slate-700/80 border border-slate-200 dark:border-slate-600 rounded-xl p-6 space-y-4 shadow-sm animate-fade-in">
               <div className="flex items-center gap-2 text-accent font-bold">
                 <span>✨</span>
-                <span>Identificació</span>
+                <span>{t('identification')}</span>
               </div>
               <p className="text-slate-700 dark:text-slate-300 leading-relaxed italic">
                 "{result.descripcio}"

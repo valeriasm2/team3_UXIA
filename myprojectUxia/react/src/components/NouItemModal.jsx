@@ -1,6 +1,10 @@
+import React from "react";
+import { useTranslation } from "react-i18next";
 import ItemFormModal from "./ItemFormModal";
 
 const NouItemModal = ({ expo, onClose, onSuccess }) => {
+  const { t } = useTranslation();
+
   const handleSubmit = async ({
     nom,
     descripcio,
@@ -24,7 +28,7 @@ const NouItemModal = ({ expo, onClose, onSuccess }) => {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || `Error ${res.status}`);
+      throw new Error(data.detail || `${t('error')} ${res.status}`);
     }
     const item = await res.json();
     onSuccess(item, imatges.length > 0);
@@ -32,11 +36,11 @@ const NouItemModal = ({ expo, onClose, onSuccess }) => {
 
   return (
     <ItemFormModal
-      title="+ Nou Ítem"
-      subtitle={`Expo: ${expo.nom}`}
+      title={t('new_item_title')}
+      subtitle={`${t('expo_label')}: ${expo.nom}`}
       onSubmit={handleSubmit}
       onClose={onClose}
-      submitLabel="Crear Ítem"
+      submitLabel={t('create_item')}
     />
   );
 };

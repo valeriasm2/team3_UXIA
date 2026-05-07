@@ -1,6 +1,9 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const Footer = () => {
+  const { t } = useTranslation();
+
   return (
     <footer className="mt-auto border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 py-12 transition-colors">
       <div className="max-w-7xl mx-auto px-6 space-y-10">
@@ -14,7 +17,7 @@ const Footer = () => {
           >
             <img
               src="/media/logosFooter/generalitat.png"
-              alt="Generalitat de Catalunya"
+              alt={t('generalitat')}
               className="w-full h-auto object-contain"
             />
           </a>
@@ -27,7 +30,7 @@ const Footer = () => {
           >
             <img
               src="/media/logosFooter/ministerio.png"
-              alt="Ministeri d'Educació"
+              alt={t('ministry')}
               className="w-full h-auto object-contain"
             />
           </a>
@@ -39,7 +42,7 @@ const Footer = () => {
               UXIA <span className="text-accent">PROJECT</span>
             </p>
             <p className="text-slate-400 dark:text-slate-500 text-sm">
-              Assistent Intel·ligent d'Exposicions © 2026
+              {t('copyright')} © 2026
             </p>
           </div>
         </div>

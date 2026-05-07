@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const getCookie = (name) => {
   const value = `; ${document.cookie}`;
@@ -9,6 +10,7 @@ const getCookie = (name) => {
 };
 
 const Historial = () => {
+  const { t } = useTranslation();
   const [intents, setIntents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,7 +29,6 @@ const Historial = () => {
     
     try {
       setLoading(true);
-      // Filtrar intents por ckie
       const response = await fetch(`/api/intents?cookie_id=${userId}`, {
         credentials: "include",
       });
@@ -48,7 +49,7 @@ const Historial = () => {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return "Data desconeguda";
+    if (!dateString) return t('unknown_date');
     const date = new Date(dateString);
     return date.toLocaleDateString("ca-ES", {
       day: "2-digit",
@@ -59,13 +60,12 @@ const Historial = () => {
     });
   };
 
-  // Mostrar loading 
   if (userLoading || loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin text-3xl mb-2">⏳</div>
-          <p className="text-slate-600">Carregant historial...</p>
+          <p className="text-slate-600">{t('loading_history')}</p>
         </div>
       </div>
     );
@@ -75,12 +75,12 @@ const Historial = () => {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center text-red-500 p-6 bg-white rounded-lg shadow">
-          <p className="mb-4">❌ Error: {error}</p>
+          <p className="mb-4">❌ {t('error')}: {error}</p>
           <button 
             onClick={cargarIntents}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
-            Reintentar
+            {t('retry')}
           </button>
         </div>
       </div>
@@ -97,7 +97,7 @@ const Historial = () => {
           >
             ←
           </button>
-          <h1 className="text-xl font-bold text-slate-800">📋 Historial d'Intents</h1>
+          <h1 className="text-xl font-bold text-slate-800">📋 {t('history_title')}</h1>
         </div>
       </div>
 
@@ -105,9 +105,9 @@ const Historial = () => {
         {intents.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow-sm">
             <div className="text-6xl mb-4">📭</div>
-            <p className="text-slate-600 font-medium">No hi ha intents per mostrar</p>
+            <p className="text-slate-600 font-medium">{t('no_intents')}</p>
             <p className="text-slate-400 text-sm mt-2">
-              Fes una foto a un item per començar
+              {t('take_photo')}
             </p>
           </div>
         ) : (
@@ -115,7 +115,6 @@ const Historial = () => {
             {intents.map((intent) => (
               <div key={intent.id} className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition">
                 <div className="flex gap-4">
-                  {/* Imatge */}
                   <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                     {intent.imatge ? (
                       <img
@@ -135,23 +134,22 @@ const Historial = () => {
                     )}
                   </div>
                   
-                  {/* Información */}
                   <div className="flex-1">
                     <div className="flex justify-between items-start flex-wrap gap-2">
                       <div>
                         {intent.encert === true && (
                           <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                            ✅ Encert
+                            ✅ {t('success')}
                           </span>
                         )}
                         {intent.encert === false && (
                           <span className="inline-block px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
-                            ❌ Error
+                            ❌ {t('error')}
                           </span>
                         )}
                         {intent.encert === null && (
                           <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
-                            ⏳ Pendent
+                            ⏳ {t('pending')}
                           </span>
                         )}
                       </div>
@@ -162,7 +160,7 @@ const Historial = () => {
                     
                     {intent.item && (
                       <p className="text-sm mt-2">
-                        <strong className="text-gray-700">Item:</strong>{" "}
+                        <strong className="text-gray-700">{t('item_label')}</strong>{" "}
                         <span className="text-gray-600">
                           {typeof intent.item === 'object' ? intent.item.nom : intent.item}
                         </span>
@@ -171,7 +169,7 @@ const Historial = () => {
                     
                     {intent.confiança !== null && intent.confiança !== undefined && (
                       <p className="text-sm mt-1">
-                        <strong className="text-gray-700">Confiança:</strong>{" "}
+                        <strong className="text-gray-700">{t('confidence')}</strong>{" "}
                         <span className="text-gray-600">{Math.round(intent.confiança * 100)}%</span>
                       </p>
                     )}

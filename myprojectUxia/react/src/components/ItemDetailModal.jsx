@@ -1,7 +1,10 @@
 import { useTTS } from "../hooks/useTTS";
+import { useTranslation } from "react-i18next";
 
 const ItemDetailModal = ({ item, expo, close, images }) => {
   const { speak, stop, isSpeaking, isSupported } = useTTS();
+  const { t } = useTranslation();
+
 
   if (!item) return null;
 
@@ -80,7 +83,7 @@ const ItemDetailModal = ({ item, expo, close, images }) => {
               ) : null}
             </div>
             <p className="text-accent text-sm uppercase tracking-widest font-bold">
-              Especificacions i Galeria
+              {t('specs_gallery')}
             </p>
           </div>
 
@@ -107,7 +110,7 @@ const ItemDetailModal = ({ item, expo, close, images }) => {
 
           <div className="space-y-6">
             <h3 className="text-xs uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">
-              Galeria Multimèdia
+              {t('multimedia_gallery')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {images && images.length > 0 ? (
@@ -125,7 +128,7 @@ const ItemDetailModal = ({ item, expo, close, images }) => {
                 ))
               ) : (
                 <div className="col-span-full py-16 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-slate-300 dark:text-slate-600">
-                  No hi ha imatges addicionals disponibles
+                  {t('no_additional_images')}
                 </div>
               )}
             </div>
@@ -136,7 +139,7 @@ const ItemDetailModal = ({ item, expo, close, images }) => {
               onClick={close}
               className="bg-accent text-white font-semibold py-2 px-6 rounded-lg hover:bg-accent-dark transition-colors"
             >
-              Tancar galeria
+              {t('close_gallery')}
             </button>
           </div>
         </div>

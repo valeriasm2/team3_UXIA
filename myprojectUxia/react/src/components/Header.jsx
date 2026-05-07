@@ -1,8 +1,10 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useDark } from "../App";
 import { useLanguage } from "../context/LanguageContext";
 
 const Header = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const isHistorial = location.pathname === "/historial";
@@ -11,6 +13,10 @@ const Header = () => {
 
   const { isDark, toggle } = useDark();
   const { language, changeLanguage, supportedLanguages } = useLanguage();
+
+  const cambiarIdioma = (lang) => {
+    i18n.changeLanguage(lang);
+  };
 
   if (isAdmin) {
     return (
@@ -25,40 +31,36 @@ const Header = () => {
             </div>
             <div className="flex flex-col">
               <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
-                UXIA
+                {t('app_title')}
               </h1>
               <span className="text-[10px] font-bold text-accent uppercase tracking-widest">
-                Admin
+                {t('admin')}
               </span>
             </div>
           </div>
-          <button
-            onClick={toggle}
-            aria-label="Cambiar tema"
-            className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-200 cursor-pointer flex items-center justify-center"
-          >
-            {isDark ? (
-              <svg
-                className="w-5 h-5 text-yellow-400"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
-              </svg>
-            ) : (
-              <svg
-                className="w-5 h-5 text-slate-600"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.536l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zm5.657-9.193a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM5 8a1 1 0 100-2H4a1 1 0 100 2h1z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-            )}
-          </button>
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1">
+              <button onClick={() => cambiarIdioma('en')} className="px-2 py-1 text-xs font-semibold rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition">EN</button>
+              <button onClick={() => cambiarIdioma('es')} className="px-2 py-1 text-xs font-semibold rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition">ES</button>
+              <button onClick={() => cambiarIdioma('ca')} className="px-2 py-1 text-xs font-semibold rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition">CA</button>
+              <button onClick={() => cambiarIdioma('fr')} className="px-2 py-1 text-xs font-semibold rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition">FR</button>
+            </div>
+            <button
+              onClick={toggle}
+              aria-label={t('change_theme')}
+              className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-200 cursor-pointer flex items-center justify-center"
+            >
+              {isDark ? (
+                <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.536l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zm5.657-9.193a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM5 8a1 1 0 100-2H4a1 1 0 100 2h1z" clipRule="evenodd"></path>
+                </svg>
+              )}
+            </button>
+          </div>
         </nav>
       </header>
     );
@@ -76,15 +78,59 @@ const Header = () => {
           </div>
           <div className="flex flex-col">
             <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
-              UXIA
+              {t('app_title')}
             </h1>
             <span className="text-[10px] font-bold text-accent uppercase tracking-widest">
-              Assistent
+              {t('app_subtitle')}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Selector de idioma */}
+          <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+            <button
+              onClick={() => cambiarIdioma('en')}
+              className={`px-3 py-1 text-xs font-semibold rounded-md transition ${
+                i18n.language === 'en' 
+                  ? 'bg-accent text-white' 
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+            >
+              EN
+            </button>
+            <button
+              onClick={() => cambiarIdioma('es')}
+              className={`px-3 py-1 text-xs font-semibold rounded-md transition ${
+                i18n.language === 'es' 
+                  ? 'bg-accent text-white' 
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+            >
+              ES
+            </button>
+            <button
+              onClick={() => cambiarIdioma('ca')}
+              className={`px-3 py-1 text-xs font-semibold rounded-md transition ${
+                i18n.language === 'ca' 
+                  ? 'bg-accent text-white' 
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+            >
+              CA
+            </button>
+            <button
+              onClick={() => cambiarIdioma('fr')}
+              className={`px-3 py-1 text-xs font-semibold rounded-md transition ${
+                i18n.language === 'fr' 
+                  ? 'bg-accent text-white' 
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+            >
+              FR
+            </button>
+          </div>
+
           {!isHistorial && (
             <button
               onClick={() => navigate("/historial")}
@@ -92,7 +138,7 @@ const Header = () => {
             >
               <span className="text-xl">📋</span>
               <span className="text-sm font-medium hidden sm:inline">
-                Historial
+                {t('history')}
               </span>
             </button>
           )}
@@ -128,12 +174,12 @@ const Header = () => {
             onClick={() => navigate("/admin")}
             className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
           >
-            Admin Login
+            {t('admin_login')}
           </button>
 
           <button
             onClick={toggle}
-            aria-label="Cambiar tema"
+            aria-label={t('change_theme')}
             className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-200 cursor-pointer flex items-center justify-center"
           >
             {isDark ? (
@@ -160,6 +206,9 @@ const Header = () => {
           </button>
         </div>
       </nav>
+      <div className="fixed top-4 right-4 z-50">
+        {/* Aquí estaba el selector, ahora lo movemos dentro */}
+      </div>
     </header>
   );
 };

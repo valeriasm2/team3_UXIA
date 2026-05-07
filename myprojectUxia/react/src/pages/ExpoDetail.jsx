@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import IdentificaItem from "../IdentificaItem";
 import { useTTS } from "../hooks/useTTS";
 
@@ -10,6 +11,7 @@ const ExpoDetail = ({
   onBack,
   verDetalleItem,
 }) => {
+  const { t } = useTranslation();
   const itemActual = items[indexItem];
   const { speak, stop, isSpeaking, isSupported } = useTTS();
 
@@ -51,14 +53,13 @@ const ExpoDetail = ({
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-12">
-      {/* EXPO HEADER & NAV */}
       <div className="flex flex-col sm:flex-row items-center gap-6 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
         <div className="order-2 sm:order-1">
           <button
             onClick={onBack}
             className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 p-4 rounded-full shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 flex items-center gap-2 px-4 py-2 font-bold text-xs uppercase"
           >
-            ← Tornar
+            ← {t('back')}
           </button>
         </div>
 
@@ -82,10 +83,8 @@ const ExpoDetail = ({
         </div>
       </div>
 
-      {/* ITEMS CAROUSEL */}
       {items.length > 0 ? (
         <div className="relative group">
-          {/* MOBILE ARROWS (Overlay) */}
           <div className="lg:hidden absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-2 z-20 pointer-events-none">
             <button
               onClick={anteriorItem}
@@ -128,7 +127,6 @@ const ExpoDetail = ({
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* DESKTOP LEFT ARROW */}
             <div className="hidden lg:flex lg:col-span-1 justify-center">
               <button
                 onClick={anteriorItem}
@@ -165,11 +163,11 @@ const ExpoDetail = ({
                     />
                   ) : (
                     <div className="text-slate-200 dark:text-slate-600 text-lg font-black uppercase tracking-widest">
-                      Sense imatge
+                      {t('no_images_available')}
                     </div>
                   )}
                   <div className="absolute top-6 left-6 bg-accent text-white px-4 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase shadow-lg z-10">
-                    Automòbil {indexItem + 1} de {items.length}
+                    {t('car')} {indexItem + 1} {t('of')} {items.length}
                   </div>
                 </div>
 
@@ -194,7 +192,7 @@ const ExpoDetail = ({
                       )}
                     </div>
                     <button className="text-accent text-[10px] font-black tracking-[0.2em] border-b border-accent pb-1 hover:text-accent-dark hover:border-accent-dark transition-colors self-start sm:self-auto">
-                      VEURE DETALLS +
+                      {t('view_details')}
                     </button>
                   </div>
                   <div className="flex items-start gap-3">
@@ -219,7 +217,6 @@ const ExpoDetail = ({
               </div>
             </div>
 
-            {/* DESKTOP RIGHT ARROW */}
             <div className="hidden lg:flex lg:col-span-1 justify-center">
               <button
                 onClick={seguentItem}
@@ -246,7 +243,7 @@ const ExpoDetail = ({
       ) : (
         <div className="text-center py-32 bg-slate-50/5 dark:bg-slate-800/5 rounded-[40px] border border-dashed border-slate-200/10 dark:border-slate-700/10">
           <p className="text-slate-400 dark:text-slate-600 font-black uppercase tracking-widest">
-            No hi ha vehicles en aquesta exposició
+            {t('no_vehicles')}
           </p>
         </div>
       )}
