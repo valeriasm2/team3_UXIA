@@ -110,6 +110,7 @@ class UpdateExpoSchema(Schema):
     descripcio: Optional[str] = None
     data_inici: Optional[str] = None
     data_fi: Optional[str] = None
+    idioma: Optional[str] = None
 
 
 class CreateItemSchema(Schema):

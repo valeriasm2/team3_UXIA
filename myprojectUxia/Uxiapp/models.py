@@ -129,6 +129,20 @@ class Expo(models.Model):
         default=TrainStatus.IDLE,
         verbose_name="Estat entrenament IA"
     )
+
+    class Idioma(models.TextChoices):
+        CATALA = 'ca', 'Català'
+        CASTELLA = 'es', 'Castellà'
+        ANGLES = 'en', 'Anglès'
+        FRANCES = 'fr', 'Francès'
+
+    idioma = models.CharField(
+        max_length=2,
+        choices=Idioma.choices,
+        default=Idioma.CATALA,
+        verbose_name="Idioma",
+        help_text="Idioma per a la pronunciació de l'identificador de l'ítem (TTS)"
+    )
     creat_el = models.DateTimeField(auto_now_add=True)
     actualitzat_el = models.DateTimeField(auto_now=True)
 

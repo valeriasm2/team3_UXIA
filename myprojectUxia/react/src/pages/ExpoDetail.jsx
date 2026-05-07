@@ -1,5 +1,6 @@
 import React from "react";
 import IdentificaItem from "../IdentificaItem";
+import { useTTS } from "../hooks/useTTS";
 
 const ExpoDetail = ({
   expo,
@@ -10,6 +11,7 @@ const ExpoDetail = ({
   verDetalleItem,
 }) => {
   const itemActual = items[indexItem];
+  const { speak, stop, isSpeaking, isSupported } = useTTS();
 
   const anteriorItem = () => {
     setIndexItem((prev) => (prev > 0 ? prev - 1 : items.length - 1));
@@ -17,6 +19,34 @@ const ExpoDetail = ({
 
   const seguentItem = () => {
     setIndexItem((prev) => (prev < items.length - 1 ? prev + 1 : 0));
+  };
+
+  const handleReadDescription = () => {
+    if (isSpeaking) {
+      stop();
+    } else {
+      speak(itemActual.descripcio);
+    }
+  };
+
+  // Map Expo idioma codes to Web Speech language codes
+  const getLanguageCode = (idioma) => {
+    const languageVariants = {
+      ca: "ca",
+      es: "es",
+      en: "en",
+      fr: "fr",
+    };
+    return languageVariants[idioma] || "ca";
+  };
+
+  const handleReadItemName = () => {
+    if (isSpeaking) {
+      stop();
+    } else {
+      const expoLanguage = getLanguageCode(expo.idioma);
+      speak(itemActual.nom, expoLanguage);
+    }
   };
 
   return (
@@ -145,16 +175,46 @@ const ExpoDetail = ({
 
                 <div className="space-y-4 pt-4">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
-                    <h3 className="text-3xl sm:text-4xl font-black tracking-tighter text-slate-900 dark:text-white leading-none">
-                      {itemActual.nom}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-3xl sm:text-4xl font-black tracking-tighter text-slate-900 dark:text-white leading-none">
+                        {itemActual.nom}
+                      </h3>
+                      {isSupported && (
+                        <button
+                          onClick={handleReadItemName}
+                          title="Pronunciar identificador (en l'idioma de l'exposició)"
+                          className={`flex-shrink-0 p-2 rounded-lg transition-all duration-200 font-semibold text-sm ${
+                            isSpeaking
+                              ? "bg-red-500 text-white hover:bg-red-600"
+                              : "bg-accent text-white hover:bg-accent-dark"
+                          }`}
+                        >
+                          🔊
+                        </button>
+                      )}
+                    </div>
                     <button className="text-accent text-[10px] font-black tracking-[0.2em] border-b border-accent pb-1 hover:text-accent-dark hover:border-accent-dark transition-colors self-start sm:self-auto">
                       VEURE DETALLS +
                     </button>
                   </div>
-                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-lg line-clamp-2 italic">
-                    "{itemActual.descripcio}"
-                  </p>
+                  <div className="flex items-start gap-3">
+                    <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-lg line-clamp-2 italic flex-1">
+                      "{itemActual.descripcio}"
+                    </p>
+                    {isSupported && (
+                      <button
+                        onClick={handleReadDescription}
+                        title={isSpeaking ? "Parar" : "Llegir descripció"}
+                        className={`flex-shrink-0 p-2 rounded-lg transition-all duration-200 font-semibold text-sm ${
+                          isSpeaking
+                            ? "bg-red-500 text-white hover:bg-red-600"
+                            : "bg-accent text-white hover:bg-accent-dark"
+                        }`}
+                      >
+                        {isSpeaking ? "⏹️ Parar" : "🔊 Escoltar"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
