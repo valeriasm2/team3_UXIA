@@ -27,10 +27,9 @@ const LANGUAGE_NAMES = {
 const getBrowserLanguage = () => {
   if (typeof navigator === "undefined") return "ca";
 
-  const browserLang = navigator.language || navigator.userLanguage || "ca";
+  const browserLang = navigator.language || navigator.userLanguage || "en";
   const langCode = browserLang.split("-")[0];
 
-  // Map common language codes to our supported languages
   const langMap = {
     ca: "ca",
     es: "es",
@@ -38,7 +37,7 @@ const getBrowserLanguage = () => {
     fr: "fr",
   };
 
-  return langMap[langCode] || "ca";
+  return langMap[langCode] || "en";
 };
 
 export const LanguageProvider = ({ children }) => {

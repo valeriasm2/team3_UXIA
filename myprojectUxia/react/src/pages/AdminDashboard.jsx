@@ -6,6 +6,7 @@ import EditExpoModal from "../components/EditExpoModal";
 import EditItemModal from "../components/EditItemModal";
 import BtnEntrenarIA from "../components/BtnENtrenarIA";
 import { useDark } from "../App";
+import { useLanguage } from "../context/LanguageContext";
 
 const Pencil = () => (
   <svg
@@ -37,7 +38,7 @@ const badgeText = (estat, t) =>
     ACTUALITZABLE: t('updatable'),
   })[estat] ?? t('init');
 
-const Thumb = ({ item, t }) => (
+const Thumb = ({ item }) => (
   <div className="flex flex-col items-center" title={item.nom}>
     {item.imatge_destacada ? (
       <img
@@ -65,10 +66,20 @@ const EditBtn = ({ onClick }) => (
   </button>
 );
 
+const LANGS = ["en", "es", "ca", "fr"];
+
 const AdminDashboard = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { isDark, toggle } = useDark();
+  const { changeLanguage } = useLanguage();
+
+  const currentLang = i18n.language?.split("-")[0] || "en";
+
+  const cambiarIdioma = (lang) => {
+    i18n.changeLanguage(lang);
+    changeLanguage(lang);
+  };
   const [user, setUser] = useState(null);
   const [myExpos, setMyExpos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -214,47 +225,44 @@ const AdminDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center gap-4 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('admin_panel')}</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-              {t('user_label')}:{" "}
-              <span className="font-semibold text-gray-900 dark:text-white">{user}</span>
-            </p>
           </div>
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex gap-3 flex-wrap items-center">
+            <span className="text-sm text-slate-500 dark:text-slate-400">
+              <span className="font-semibold text-slate-800 dark:text-white">{user}</span>
+            </span>
+            <div className="w-px h-5 bg-slate-200 dark:bg-slate-600" />
+            <div className="flex gap-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+              {LANGS.map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => cambiarIdioma(lang)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-all duration-150 ${
+                    currentLang === lang
+                      ? "bg-accent text-white shadow-sm"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
+            <div className="w-px h-5 bg-slate-200 dark:bg-slate-600" />
             <button
               onClick={toggle}
               aria-label={t('change_theme')}
-              className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-200 cursor-pointer flex items-center justify-center"
+              className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200 flex items-center justify-center"
             >
               {isDark ? (
-                <svg
-                  className="w-5 h-5 text-yellow-400"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                 </svg>
               ) : (
-                <svg
-                  className="w-5 h-5 text-slate-600"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.536l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zm5.657-9.193a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM5 8a1 1 0 100-2H4a1 1 0 100 2h1z"
-                    clipRule="evenodd"
-                  ></path>
+                <svg className="w-4 h-4 text-slate-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.536l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zm5.657-9.193a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM5 8a1 1 0 100-2H4a1 1 0 100 2h1z" clipRule="evenodd" />
                 </svg>
               )}
             </button>
-            {view === null && (
-              <button
-                onClick={() => setView("list")}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition"
-              >
-                {t('my_expositions')} ({myExpos.length})
-              </button>
-            )}
+            <div className="w-px h-5 bg-slate-200 dark:bg-slate-600" />
             <button
               onClick={handleLogout}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition"
@@ -345,7 +353,7 @@ const AdminDashboard = () => {
                       </div>
                       <div className="col-span-3 flex gap-2 flex-wrap items-center">
                         {expo.items?.slice(0, 3).map((item) => (
-                          <Thumb key={item.id} item={item} t={t} />
+                          <Thumb key={item.id} item={item} />
                         ))}
                         {expo.items?.length > 3 && (
                           <span className="text-xs text-blue-600 dark:text-blue-400">
@@ -394,7 +402,7 @@ const AdminDashboard = () => {
                         onClick={() => setView(expo)}
                       >
                         {expo.items?.slice(0, 4).map((item) => (
-                          <Thumb key={item.id} item={item} t={t} />
+                          <Thumb key={item.id} item={item} />
                         ))}
                         {expo.items?.length > 4 && (
                           <span className="self-center text-xs text-blue-600 dark:text-blue-400">

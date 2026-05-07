@@ -89,5 +89,19 @@
   "item_created_with_update": "\"{name}\" créé. Expo → Actualisable.",
   "item_updated": "\"{name}\" mis à jour.",
   "item_updated_with_update": "\"{name}\" mis à jour. Expo → Actualisable.",
-  "more_images": "Plus d'images"
+  "more_images": "Plus d'images",
+  "identifica_title": "Identifier l'Élément",
+  "ollama_vision": "Vision IA · Ollama",
+  "take_photo_title": "Prenez une photo",
+  "identifica_description": "Téléchargez ou prenez une photo d'un article d'exposition pour l'identifier.",
+  "analyzing": "Analyse en cours...",
+  "camera_error": "Erreur de caméra",
+  "cancel": "Annuler",
+  "capture": "Capturer",
+  "close": "Fermer",
+  "identification": "Identification",
+  "no_image": "Pas d'image",
+  "open_camera": "Ouvrir la caméra",
+  "processing": "Traitement en cours...",
+  "upload_image": "Télécharger l'image"
 }

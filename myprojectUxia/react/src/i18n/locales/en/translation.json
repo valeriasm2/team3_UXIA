@@ -89,5 +89,19 @@
   "item_created_with_update": "\"{name}\" created. Expo → Updatable.",
   "item_updated": "\"{name}\" updated.",
   "item_updated_with_update": "\"{name}\" updated. Expo → Updatable.",
-  "more_images": "More images"
+  "more_images": "More images",
+  "identifica_title": "Identify the Item",
+  "ollama_vision": "AI Vision · Ollama",
+  "take_photo_title": "Take a photo",
+  "identifica_description": "Upload or take a photo of an exhibition item to identify it.",
+  "analyzing": "Analysing...",
+  "camera_error": "Camera error",
+  "cancel": "Cancel",
+  "capture": "Capture",
+  "close": "Close",
+  "identification": "Identification",
+  "no_image": "No image",
+  "open_camera": "Open camera",
+  "processing": "Processing...",
+  "upload_image": "Upload image"
 }

@@ -89,5 +89,19 @@
   "item_created_with_update": "\"{name}\" creado. Expo → Actualizable.",
   "item_updated": "\"{name}\" actualizado.",
   "item_updated_with_update": "\"{name}\" actualizado. Expo → Actualizable.",
-  "more_images": "Más imágenes"
+  "more_images": "Más imágenes",
+  "identifica_title": "Identifica el Ítem",
+  "ollama_vision": "Visión IA · Ollama",
+  "take_photo_title": "Haz una foto",
+  "identifica_description": "Sube o toma una foto de un item de la exposición para identificarlo.",
+  "analyzing": "Analizando...",
+  "camera_error": "Error de cámara",
+  "cancel": "Cancelar",
+  "capture": "Capturar",
+  "close": "Cerrar",
+  "identification": "Identificación",
+  "no_image": "Sin imagen",
+  "open_camera": "Abrir cámara",
+  "processing": "Procesando...",
+  "upload_image": "Subir imagen"
 }
