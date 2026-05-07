@@ -17651,3 +17651,43 @@ ERROR 2026-05-04 16:35:11,120 log Bad Gateway: /api/expos/8/entrenar
 ERROR 2026-05-04 16:35:11,121 basehttp "POST /api/expos/8/entrenar HTTP/1.1" 502 133
 ERROR 2026-05-05 13:52:35,177 log Bad Gateway: /api/expos/1/entrenar
 ERROR 2026-05-05 13:52:35,177 basehttp "POST /api/expos/1/entrenar HTTP/1.1" 502 126
+ERROR 2026-05-07 14:28:35,364 errors 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: no such column: Uxiapp_expo.idioma [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7e698e1df680>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+Traceback (most recent call last):
+  File "/home/super/Escriptori/UXIA/team3_UXIA/uxia_virtual/lib/python3.12/site-packages/ninja/operation.py", line 219, in run
+    return self._result_to_response(request, result, temporal_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/super/Escriptori/UXIA/team3_UXIA/uxia_virtual/lib/python3.12/site-packages/ninja/operation.py", line 422, in _result_to_response
+    validated_object = response_model.model_validate(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/super/Escriptori/UXIA/team3_UXIA/uxia_virtual/lib/python3.12/site-packages/pydantic/main.py", line 732, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pydantic_core._pydantic_core.ValidationError: 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: no such column: Uxiapp_expo.idioma [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7e698e1df680>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+ERROR 2026-05-07 14:28:35,367 log Internal Server Error: /api/expos
+ERROR 2026-05-07 14:28:35,367 basehttp "GET /api/expos?propietari=sparkly HTTP/1.1" 500 1191
+ERROR 2026-05-07 14:28:35,374 errors 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: no such column: Uxiapp_expo.idioma [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7e698dfd2f90>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+Traceback (most recent call last):
+  File "/home/super/Escriptori/UXIA/team3_UXIA/uxia_virtual/lib/python3.12/site-packages/ninja/operation.py", line 219, in run
+    return self._result_to_response(request, result, temporal_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/super/Escriptori/UXIA/team3_UXIA/uxia_virtual/lib/python3.12/site-packages/ninja/operation.py", line 422, in _result_to_response
+    validated_object = response_model.model_validate(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/super/Escriptori/UXIA/team3_UXIA/uxia_virtual/lib/python3.12/site-packages/pydantic/main.py", line 732, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pydantic_core._pydantic_core.ValidationError: 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: no such column: Uxiapp_expo.idioma [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7e698dfd2f90>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+ERROR 2026-05-07 14:28:35,375 log Internal Server Error: /api/expos
+ERROR 2026-05-07 14:28:35,376 basehttp "GET /api/expos?propietari=sparkly HTTP/1.1" 500 1191
