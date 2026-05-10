@@ -630,11 +630,12 @@ def entrenar_expo(request, expo_id: int):
             if label_name:
                 http_requests.delete(f"{ia_url}/dataset/labels/{label_name}", headers=headers, timeout=10)
 
-    # Puja totes les imatges en un sol batch amb noms de fitxer únics
-    # Salta ítems amb menys de 2 imatges (requisit mínim de la IA)
-    files = []
-    form_data = []
-    file_handles = []
+    # Puja les imatges una a una per poder saltar duplicats de contingut.
+    # Salta ítems amb menys de 2 imatges (requisit mínim de la IA).
+    uploaded = 0
+    skipped = 0
+    upload_errors = []
+
     for item in expo.items.all():
         if item.imatges.filter(es_publica=True).count() < 2:
             continue
@@ -642,37 +643,43 @@ def entrenar_expo(request, expo_id: int):
         for imatge in item.imatges.filter(es_publica=True):
             try:
                 fh = imatge.imatge.open('rb')
-                file_handles.append(fh)
                 filename = f"{imatge.id}_{imatge.imatge.name.split('/')[-1]}"
-                files.append(('files', (filename, fh, 'image/jpeg')))
-                form_data.append(('labels', label))
-            except Exception:
-                pass
+                try:
+                    resp = http_requests.post(
+                        f"{ia_url}/dataset/images",
+                        headers=headers,
+                        files=[('files', (filename, fh, 'image/jpeg'))],
+                        data=[('labels', label)],
+                        timeout=60,
+                    )
+                finally:
+                    fh.close()
 
-    if not files:
+                if resp.ok:
+                    uploaded += 1
+                elif resp.status_code in (409, 422) and 'uplicated' in resp.text:
+                    # El servei IA ja té aquest contingut, el saltem
+                    skipped += 1
+                else:
+                    upload_errors.append(f"{filename}: {resp.text[:120]}")
+            except Exception as exc:
+                upload_errors.append(f"{filename}: {exc}")
+
+    if uploaded == 0 and skipped == 0:
         expo.train_status = Expo.TrainStatus.ERROR
         expo.save()
         raise HttpError(400, "L'expo no té imatges per entrenar (mínim 2 per ítem)")
 
-    try:
-        upload_resp = http_requests.post(
-            f"{ia_url}/dataset/images",
-            headers=headers,
-            files=files,
-            data=form_data,
-            timeout=120,
-        )
-    finally:
-        for fh in file_handles:
-            try:
-                fh.close()
-            except Exception:
-                pass
+    if uploaded == 0 and skipped > 0:
+        # Totes les imatges ja estan al servei IA: podem entrenar igualment
+        pass
 
-    if not upload_resp.ok:
+    if upload_errors and uploaded == 0 and skipped == 0:
         expo.train_status = Expo.TrainStatus.ERROR
         expo.save()
-        raise HttpError(422, f"Error pujant imatges: {upload_resp.text}")
+        raise HttpError(502, f"Errors pujant imatges: {'; '.join(upload_errors[:3])}")
+
+    print(f"[entrenar] expo={expo_id} uploaded={uploaded} skipped_duplicats={skipped} errors={len(upload_errors)}")
 
     # Comprova que el dataset és entrenable
     runtime_resp = http_requests.get(f"{ia_url}/runtime", headers=headers, timeout=10)

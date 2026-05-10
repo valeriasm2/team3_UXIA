@@ -17697,3 +17697,83 @@ ERROR 2026-05-07 15:28:04,531 log Bad Gateway: /api/expos/4/entrenar
 ERROR 2026-05-07 15:28:12,288 log Bad Gateway: /api/expos/4/entrenar
 ERROR 2026-05-07 15:28:24,727 log Bad Gateway: /api/expos/4/entrenar
 ERROR 2026-05-07 15:32:07,477 log Bad Gateway: /api/expos/4/entrenar
+ERROR 2026-05-08 20:47:00,940 errors 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: database is locked [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7f1a07c92e90>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+Traceback (most recent call last):
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/ninja/operation.py", line 219, in run
+    return self._result_to_response(request, result, temporal_response)
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/ninja/operation.py", line 422, in _result_to_response
+    validated_object = response_model.model_validate(
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/pydantic/main.py", line 732, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+pydantic_core._pydantic_core.ValidationError: 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: database is locked [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7f1a07c92e90>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+ERROR 2026-05-08 20:47:00,943 log Internal Server Error: /api/expos
+ERROR 2026-05-08 20:47:08,927 errors 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: database is locked [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7f1a07d6f3d0>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+Traceback (most recent call last):
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/ninja/operation.py", line 219, in run
+    return self._result_to_response(request, result, temporal_response)
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/ninja/operation.py", line 422, in _result_to_response
+    validated_object = response_model.model_validate(
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/pydantic/main.py", line 732, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+pydantic_core._pydantic_core.ValidationError: 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: database is locked [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7f1a07d6f3d0>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+ERROR 2026-05-08 20:47:08,929 log Internal Server Error: /api/expos
+ERROR 2026-05-08 20:47:15,941 errors 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: database is locked [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7f1a07c93be0>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+Traceback (most recent call last):
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/ninja/operation.py", line 219, in run
+    return self._result_to_response(request, result, temporal_response)
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/ninja/operation.py", line 422, in _result_to_response
+    validated_object = response_model.model_validate(
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/pydantic/main.py", line 732, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+pydantic_core._pydantic_core.ValidationError: 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: database is locked [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7f1a07c93be0>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+ERROR 2026-05-08 20:47:15,943 log Internal Server Error: /api/expos
+ERROR 2026-05-08 20:47:30,970 errors 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: database is locked [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7f1a07d6e4a0>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+Traceback (most recent call last):
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/ninja/operation.py", line 219, in run
+    return self._result_to_response(request, result, temporal_response)
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/ninja/operation.py", line 422, in _result_to_response
+    validated_object = response_model.model_validate(
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/pydantic/main.py", line 732, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+pydantic_core._pydantic_core.ValidationError: 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: database is locked [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7f1a07d6e4a0>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+ERROR 2026-05-08 20:47:30,972 log Internal Server Error: /api/expos
+ERROR 2026-05-08 20:47:31,240 errors 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: database is locked [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7f1a07d6eaa0>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+Traceback (most recent call last):
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/ninja/operation.py", line 219, in run
+    return self._result_to_response(request, result, temporal_response)
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/ninja/operation.py", line 422, in _result_to_response
+    validated_object = response_model.model_validate(
+  File "/home/super/team3_UXIA/uxia_virtual/lib/python3.10/site-packages/pydantic/main.py", line 732, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+pydantic_core._pydantic_core.ValidationError: 1 validation error for NinjaResponseSchema
+response
+  Error extracting attribute: OperationalError: database is locked [type=get_attribute_error, input_value=<DjangoGetter: <ninja.ope...ject at 0x7f1a07d6eaa0>>, input_type=DjangoGetter]
+    For further information visit https://errors.pydantic.dev/2.13/v/get_attribute_error
+ERROR 2026-05-08 20:47:31,242 log Internal Server Error: /api/items

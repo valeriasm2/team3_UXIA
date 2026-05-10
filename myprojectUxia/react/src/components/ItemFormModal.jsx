@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Component base reutilitzable per a NouItemModal i EditItemModal.
@@ -33,6 +34,7 @@ const ItemFormModal = ({
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetch("/api/etiquetes")
@@ -114,7 +116,7 @@ const ItemFormModal = ({
           {/* Nom */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nom <span className="text-red-500">*</span>
+              {t('name')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -122,14 +124,13 @@ const ItemFormModal = ({
               onChange={(e) => setNom(e.target.value)}
               required
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Nom de l'ítem"
             />
           </div>
 
           {/* Descripció */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Descripció <span className="text-red-500">*</span>
+              {t('description')} <span className="text-red-500">*</span>
             </label>
             <textarea
               value={descripcio}
@@ -137,7 +138,6 @@ const ItemFormModal = ({
               required
               rows={3}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              placeholder="Descripció de l'ítem"
             />
           </div>
 
@@ -165,7 +165,7 @@ const ItemFormModal = ({
               </div>
               {selectedEtiquetes.length > 0 && (
                 <p className="text-xs text-blue-600 mt-1">
-                  {selectedEtiquetes.length} tag(s) seleccionat(s)
+                  {selectedEtiquetes.length} tag(s)
                 </p>
               )}
             </div>
@@ -174,9 +174,9 @@ const ItemFormModal = ({
           {/* Imatges */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Imatges{" "}
+              {t('images_label')}{" "}
               <span className="text-gray-400 font-normal text-xs">
-                (si s'afegeixen, l'expo passa a ACTUALITZABLE)
+                ({t('images_expo_note')})
               </span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer border-2 border-dashed border-gray-300 hover:border-blue-400 rounded-lg px-4 py-3 transition">
@@ -195,8 +195,8 @@ const ItemFormModal = ({
               </svg>
               <span className="text-sm text-gray-500">
                 {imatges.length > 0
-                  ? `${imatges.length} imatge(s) seleccionada(s)`
-                  : "Selecciona imatges (múltiple permès)"}
+                  ? `${imatges.length} ${t('images_label')}`
+                  : t('select_new_image')}
               </span>
               <input
                 type="file"
@@ -209,7 +209,7 @@ const ItemFormModal = ({
             {previews.length > 0 && (
               <div className="mt-3">
                 <p className="text-xs font-medium text-gray-600 mb-2">
-                  Gestiona les imatges: Clica per marcar com destacada
+                  {t('images_manage_hint')}
                 </p>
                 <div className="flex gap-3 flex-wrap">
                   {previews.map((src, i) => (
@@ -273,7 +273,7 @@ const ItemFormModal = ({
                 onClick={onDelete}
                 className="px-4 py-2 border border-red-300 text-red-600 rounded-lg font-medium text-sm hover:bg-red-50 transition"
               >
-                Eliminar
+                {t('delete')}
               </button>
             )}
             <button
@@ -281,14 +281,14 @@ const ItemFormModal = ({
               onClick={onClose}
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 transition"
             >
-              Cancel·lar
+              {t('cancel')}
             </button>
             <button
               type="submit"
               disabled={loading}
               className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition disabled:opacity-50"
             >
-              {loading ? "Processant…" : submitLabel}
+              {loading ? t('processing') : submitLabel}
             </button>
           </div>
         </form>

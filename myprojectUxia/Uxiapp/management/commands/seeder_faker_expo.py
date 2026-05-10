@@ -47,7 +47,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--count', type=int, default=1, help='Número d\'expos a generar')
-        parser.add_argument('--max-fotos', type=int, default=4, help='Màxim de fotos per ítem')
+        parser.add_argument('--max-fotos', type=int, default=10, help='Màxim de fotos per ítem')
 
     def handle(self, *args, **options):
         count = options['count']

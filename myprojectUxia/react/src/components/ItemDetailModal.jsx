@@ -32,7 +32,8 @@ const ItemDetailModal = ({ item, expo, close, images }) => {
     if (isSpeaking) {
       stop();
     } else {
-      speak(item.descripcio);
+      const expoLanguage = expo ? getLanguageCode(expo.idioma) : null;
+      speak(item.descripcio, expoLanguage);
     }
   };
 
@@ -59,7 +60,7 @@ const ItemDetailModal = ({ item, expo, close, images }) => {
               {isSupported && (
                 <button
                   onClick={handleReadItemName}
-                  title={`Pronunciar identificador${expo ? ` (${expo.idioma})` : ""}`}
+                  title={t('read_item_name_tooltip')}
                   className={`flex-shrink-0 p-2 rounded-lg transition-all duration-200 font-semibold text-sm ${
                     isSpeaking
                       ? "bg-red-500 text-white hover:bg-red-600"
